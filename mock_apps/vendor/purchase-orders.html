@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Purchase Orders – Acme Vendor Portal</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="vendor.css">
+</head>
+<body>
+  <main id="main">
+    <h1>Purchase Orders</h1>
+    <div class="card po-list" id="po-list"></div>
+    <div class="card" id="po-detail"><p class="muted">Select a purchase order.</p></div>
+  </main>
+  <script src="../shared/hg.js"></script>
+  <script src="../shared/data.js"></script>
+  <script src="vendor.js"></script>
+  <script>
+    VP.init("nav-pos");
+    document.addEventListener("DOMContentLoaded", () => {
+      const D = HG_DATA;
+      document.getElementById("po-list").innerHTML =
+        "<table><thead><tr><th>PO</th><th>Vendor</th><th>Date</th><th>Status</th><th>Invoice</th></tr></thead><tbody>" +
+        Object.entries(D.pos).map(([id, p]) =>
+          `<tr><td><a href="#${id}" id="po-link-${id}">${id}</a></td><td>${p.vendor}</td><td>${p.date}</td>` +
+          `<td>${p.status}</td><td>${p.invoice}</td></tr>`).join("") + "</tbody></table>";
+      function show() {
+        const id = location.hash.slice(1);
+        const p = D.pos[id];
+        document.getElementById("po-detail").innerHTML = p
+          ? `<h2 id="po-title">${id} · ${p.vendor}</h2><p class="muted">Ordered ${p.date} · Status: ${p.status}</p>` +
+            D.linesTable(p.lines, "po-" + id)
+          : '<p class="muted">Select a purchase order.</p>';
+      }
+      window.addEventListener("hashchange", show);
+      show();
+    });
+  </script>
+</body>
+</html>

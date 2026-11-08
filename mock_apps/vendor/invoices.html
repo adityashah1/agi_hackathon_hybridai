@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoices – Acme Vendor Portal</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="vendor.css">
+</head>
+<body>
+  <main id="main">
+    <h1>Invoices</h1>
+    <div class="card" id="inv-list"></div>
+    <div class="card" id="inv-detail"><p class="muted">Select an invoice.</p></div>
+  </main>
+  <script src="../shared/hg.js"></script>
+  <script src="../shared/data.js"></script>
+  <script src="vendor.js"></script>
+  <script>
+    VP.init("nav-invoices");
+    document.addEventListener("DOMContentLoaded", () => {
+      const D = HG_DATA;
+      document.getElementById("inv-list").innerHTML =
+        "<table><thead><tr><th>Invoice</th><th>Vendor</th><th>PO</th><th>Date</th><th class='num'>Total</th></tr></thead><tbody>" +
+        Object.entries(D.invoices).map(([id, v]) =>
+          `<tr><td><a href="#${id}" id="inv-link-${id}">${id}</a></td><td>${v.vendor}</td><td>${v.po}</td>` +
+          `<td>${v.date}</td><td class="num">${D.money(D.totals(v.lines).total)}</td></tr>`).join("") +
+        "</tbody></table>";
+      function show() {
+        const id = location.hash.slice(1);
+        const v = D.invoices[id];
+        document.getElementById("inv-detail").innerHTML = v
+          ? `<h2 id="inv-title">${id} · ${v.vendor}</h2><p class="muted">PO ${v.po} · Issued ${v.date} · Due ${v.due}</p>` +
+            D.linesTable(v.lines, "inv-" + id)
+          : '<p class="muted">Select an invoice.</p>';
+      }
+      window.addEventListener("hashchange", show);
+      show();
+    });
+  </script>
+</body>
+</html>
