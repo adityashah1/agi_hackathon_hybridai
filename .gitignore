@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Screenshots captured during runs (may contain on-screen data)
+data/runs/*/screens/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local model weights / caches
+models/
+*.gguf
+*.safetensors
+
+# macOS
+.DS_Store
