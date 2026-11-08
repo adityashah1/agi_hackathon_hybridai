@@ -1,0 +1,33 @@
+[project]
+name = "hybrid-gate"
+version = "0.1.0"
+description = "Hybrid computer-use agent: local vision model proposes, a gate decides whether to trust it or escalate to Simular Sai in the cloud."
+requires-python = ">=3.11"
+dependencies = [
+    "python-dotenv>=1.0",
+    "pillow>=10.0",
+    "requests>=2.31",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+# Local model backends -- installed later, deliberately not now.
+local = [
+    "mlx-vlm",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["env*", "brain*", "mock_apps*", "tasks*", "profiler*", "runner*", "gate_lab*", "escalation*", "leak*", "panel*"]
+
+[tool.ruff]
+line-length = 100
