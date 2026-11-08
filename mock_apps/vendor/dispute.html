@@ -139,6 +139,8 @@
         $("case-number").textContent = caseNo;
         st.done = true;
         window.__dispute = { invoice: st.invoice, line: st.line, date: st.date, reason: reason, case: caseNo };
+        // Remembered so the inbox can tell whether a reply quotes the REAL case number (task T1).
+        try { localStorage.setItem("hg_last_dispute", JSON.stringify(window.__dispute)); } catch (e) {}
         go("done");   // route() shows the result and calls HG.confirm once
       });
 

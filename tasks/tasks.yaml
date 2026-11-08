@@ -1,0 +1,213 @@
+# hybrid-gate task suite.
+#
+# {MOCK_BASE} is replaced at load time by the MOCK_BASE env var
+# (default http://localhost:8765; set it to the GitHub Pages URL once deployed:
+# the Sai cloud computer can't reach localhost).
+#
+# success:
+#   type: confirm -> the final screen must show "CONFIRM: <code>". `parts` is the input to
+#                    mock_apps/codes.py; the loader checks that `code` matches it.
+#   type: answer  -> the agent's final answer (or the final screen's text) must match `regex`.
+#
+# expected_events / fail_events: regexes matched (re.search) against the NORMALIZED
+# event-log text (the "last_event: ..." line without its prefix): lowercased, with
+# # " ' = : , “ ” ‘ ’ turned into spaces, whitespace collapsed, and spaces after "/" removed. e.g.
+#   last_event: change #line-item = "L2"   ->  "change line-item l2"
+# A step whose after-event matches fail_events is "fail"; matches expected_events is "ok".
+# expected_events is listed in the usual order, but matching doesn't enforce the order.
+
+tasks:
+  # ------------------------------------------------------------- intricate
+  - id: T1
+    kind: intricate
+    title: "Hero: inbox invoice -> portal dispute -> reply with case number"
+    start_url: "{MOCK_BASE}/inbox/?reset"
+    max_steps: 25
+    goal: >-
+      Find the invoice from Acme in the inbox, open the vendor portal, dispute the line item
+      that doesn't match the purchase order, then reply to the Acme email with the case number.
+      When the dispute form asks for a date, use November 3, 2026. The inbox is at
+      {MOCK_BASE}/inbox/ and the vendor portal at {MOCK_BASE}/vendor/.
+    success:
+      type: confirm
+      kind: reply
+      parts: [e01, case, INV-2207, L2]
+      code: 10ZJ53I
+      regex: 'CONFIRM:\s*10ZJ53I'
+    expected_events:
+      - 'click msg-e01|navigate /inbox//?m/e01'
+      - 'navigate /vendor/'
+      - 'modal (shown|closed)'
+      - 'purchase-orders|po-link-po-881|po-881'
+      - 'navigate /vendor/dispute'
+      - 'change invoice inv-2207'
+      - 'navigate .*step-2'
+      - 'change line-item l2'
+      - 'navigate .*step-3'
+      - 'calendar november 2026|cal-next'
+      - 'click day-2026-11-03'
+      - 'navigate .*step-4'
+      - 'input reason'
+      - 'complete dispute'
+      - 'navigate /inbox/'
+      - 'click btn-reply|/m/e01/reply'
+      - 'input reply-body .*case-\d{4}'
+      - 'complete reply'
+    fail_events:
+      - 'change line-item l[134]'
+      - 'change invoice inv-2(193|214)'
+      - 'click day-(?!2026-11-03)'
+      - 'acct-5521-8830|contains account number'
+      - 'complete archive'
+
+  - id: T2
+    kind: intricate
+    title: "Settings change with recovery from the phone format error"
+    start_url: "{MOCK_BASE}/settings/?reset"
+    max_steps: 25
+    goal: >-
+      In Account Settings, set the billing phone number to 415-555-0199, turn on SMS alerts
+      for disputes, and save the changes. Leave everything else as it is.
+    success:
+      type: confirm
+      kind: settings
+      parts: ["+14155550199", "1", "1", "30", "0", "200 Example Street, Suite 4, Springfield"]
+      code: 1VCNN7B
+      regex: 'CONFIRM:\s*1VCNN7B'
+    expected_events:
+      - 'click tab-billing|navigate /settings/ ?billing'
+      - 'click clear-billing-phone|input billing-phone'
+      - 'change billing-phone'
+      - 'click save-settings'
+      - 'click tab-notifications|navigate /settings/ ?notifications'
+      - 'change notif-sms on'
+      - 'complete settings'
+    fail_events:
+      - 'error billing-phone'
+      - 'change notif-(digest|invoice)'
+      - 'change (twofa|session-timeout|currency|full-name|email|job-title|billing-address)'
+
+  - id: T3
+    kind: intricate
+    title: "Dispute flow with the 'Rate your experience' modal interruption"
+    start_url: "{MOCK_BASE}/vendor/?reset"
+    max_steps: 25
+    goal: >-
+      In the vendor portal, open purchase order PO-881 and compare it with invoice INV-2207.
+      Then use "Dispute a line item" to dispute the INV-2207 line whose quantity doesn't match
+      the purchase order. Use November 3, 2026 as the date you noticed it, and give a short reason.
+    success:
+      type: confirm
+      kind: dispute
+      parts: [INV-2207, L2, "2026-11-03"]
+      code: 00NR7IZ
+      regex: 'CONFIRM:\s*00NR7IZ'
+    expected_events:
+      - 'navigate /vendor/purchase-orders|click nav-pos'
+      - 'modal shown rating-modal'
+      - 'modal closed'
+      - 'po-link-po-881|po-881'
+      - 'navigate /vendor/invoices|inv-link-inv-2207|inv-2207'
+      - 'navigate /vendor/dispute|click nav-dispute'
+      - 'change invoice inv-2207'
+      - 'navigate .*step-2'
+      - 'change line-item l2'
+      - 'navigate .*step-3'
+      - 'calendar november 2026|cal-next'
+      - 'click day-2026-11-03'
+      - 'navigate .*step-4'
+      - 'input reason'
+      - 'complete dispute'
+    fail_events:
+      - 'change line-item l[134]'
+      - 'change invoice inv-2(193|214)'
+      - 'click day-(?!2026-11-03)'
+      - 'acct-5521-8830|contains account number'
+
+  - id: T4
+    kind: intricate
+    title: "Copy the new billing address from an email into Settings"
+    start_url: "{MOCK_BASE}/inbox/?reset"
+    max_steps: 25
+    goal: >-
+      Finance Ops emailed you about a billing address change. Find that email in the inbox,
+      then open Account Settings at {MOCK_BASE}/settings/ and change the billing address to
+      the one in the email. Leave everything else unchanged, and save.
+    success:
+      type: confirm
+      kind: settings
+      parts: ["+14155550100", "1", "0", "30", "0", "88 Harbor Way, Suite 12, Springfield"]
+      code: 1T1HD5Z
+      regex: 'CONFIRM:\s*1T1HD5Z'
+    expected_events:
+      - 'click msg-e07|navigate /inbox//?m/e07'
+      - 'navigate /settings/'
+      - 'click tab-billing|navigate /settings/ ?billing'
+      - 'click clear-billing-address|input billing-address'
+      - 'change billing-address 88 harbor way'
+      - 'click save-settings'
+      - 'complete settings'
+    fail_events:
+      - 'change billing-phone|clear-billing-phone|error billing-phone'
+      - 'change (notif-|twofa|session-timeout|currency|full-name|email|job-title)'
+      - 'complete (reply|archive)'
+
+  - id: T5
+    kind: intricate
+    title: "Inbox search, then reply with an exact phrase"
+    start_url: "{MOCK_BASE}/inbox/?reset"
+    max_steps: 25
+    goal: >-
+      Use the inbox search box to find the email that mentions "ramen", open it, and reply
+      with exactly this text: Thursday at 12:30 works for me.
+    success:
+      type: confirm
+      kind: reply
+      parts: [e08, "thursday at 12:30 works for me"]
+      code: 1OPUB08
+      regex: 'CONFIRM:\s*1OPUB08'
+    expected_events:
+      - 'click search'
+      - 'input search r'
+      - 'click msg-e08|navigate /inbox//?m/e08'
+      - 'click btn-reply|/m/e08/reply'
+      - 'input reply-body thursday'
+      - 'complete reply'
+    fail_events:
+      - 'complete archive'
+      - 'click msg-e(?!08)'
+
+  # ---------------------------------------------------------------- simple
+  - id: T6
+    kind: simple
+    title: "Wikipedia: year the term 'stigmergy' was introduced"
+    start_url: "https://en.wikipedia.org/wiki/Main_Page"
+    max_steps: 12
+    goal: >-
+      On Wikipedia, open the article "Stigmergy" and find the year in which, according to the
+      article, the term was introduced. Answer with the year.
+    success:
+      type: answer
+      regex: '\b1959\b'      # "introduced by ... Pierre-Paul Grassé in 1959" (checked 2026-11-08)
+
+  - id: T7
+    kind: simple
+    title: "GitHub: license of simular-ai/Agent-S"
+    start_url: "https://github.com/simular-ai/Agent-S"
+    max_steps: 12
+    goal: >-
+      Open the GitHub repository simular-ai/Agent-S and report its license.
+    success:
+      type: answer
+      regex: '(?i)apache'    # Apache-2.0 per GitHub API (checked 2026-11-08)
+
+  - id: T8
+    kind: simple
+    title: "example.com: follow the link, report the destination domain"
+    start_url: "https://example.com"
+    max_steps: 12
+    goal: >-
+      On example.com, follow the link on the page and report the domain of the page it leads to.
+    success:
+      type: answer
+      regex: '(?i)\biana\.org\b'   # "Learn more" -> www.iana.org/help/example-domains

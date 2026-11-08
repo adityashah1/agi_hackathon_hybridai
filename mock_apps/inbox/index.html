@@ -7,7 +7,8 @@
 <link rel="stylesheet" href="../shared/base.css">
 <style>
   .layout { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 47px - 28px); }
-  #list { overflow-y: auto; border-right: 1px solid #e3e5e8; background: #fff; margin: 0; padding: 0; }
+  .layout > div:first-child { display: flex; flex-direction: column; min-height: 0; }
+  #list { flex: 1; overflow-y: auto; border-right: 1px solid #e3e5e8; background: #fff; margin: 0; padding: 0; }
   #list li { list-style: none; padding: 8px 12px; border-bottom: 1px solid #eef0f2; cursor: pointer; }
   #list li:hover { background: #f3f6fc; }
   #list li.selected { background: #e8f0fe; }
@@ -33,6 +34,9 @@
   </div>
   <div class="layout">
     <div>
+      <div style="padding:8px 12px;background:#fff;border-bottom:1px solid #eef0f2">
+        <input id="search" type="text" placeholder="Search mail" style="width:100%" autocomplete="off">
+      </div>
       <div class="counts" id="counts"></div>
       <ul id="list"></ul>
     </div>
