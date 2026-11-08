@@ -1,0 +1,57 @@
+/* Shared look for the mock apps. Sized for a 1024x768 viewport (LocalEnv). */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font: 14px/1.4 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1f2328; background: #f5f6f8; padding-bottom: 28px;
+}
+a { color: #0b57d0; }
+button {
+  font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid #c9ccd1;
+  background: #fff; cursor: pointer;
+}
+button.primary { background: #0b57d0; border-color: #0b57d0; color: #fff; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+input, select, textarea {
+  font: inherit; padding: 6px 8px; border: 1px solid #c9ccd1; border-radius: 6px; background: #fff;
+}
+label { display: block; font-weight: 600; margin: 10px 0 4px; }
+table { border-collapse: collapse; width: 100%; background: #fff; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e3e5e8; }
+th { background: #f0f2f5; font-weight: 600; }
+td.num, th.num { text-align: right; }
+
+.topbar {
+  display: flex; align-items: center; gap: 16px; padding: 10px 16px;
+  background: #fff; border-bottom: 1px solid #e3e5e8;
+}
+.topbar .brand { font-weight: 700; font-size: 16px; }
+.topbar nav a { margin-right: 14px; text-decoration: none; }
+.topbar nav a.active { font-weight: 700; text-decoration: underline; }
+.topbar .user { margin-left: auto; color: #57606a; }
+.page { padding: 16px; }
+.card { background: #fff; border: 1px solid #e3e5e8; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+.error { color: #b42318; margin-top: 4px; font-size: 13px; }
+.success { color: #1a7f37; font-weight: 600; }
+.muted { color: #6e7781; }
+
+/* Event log: fixed one-line bar at the bottom of every page. */
+#event-log {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 22px; padding: 3px 10px;
+  font: 12px/16px Menlo, Consolas, monospace; color: #e6edf3; background: #24292f;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1000;
+}
+/* Completion code: tiny and low-contrast so a person barely notices it; still on screen. */
+#confirm-code {
+  position: fixed; right: 8px; bottom: 26px; font: 10px/12px Menlo, Consolas, monospace;
+  color: #b8bcc2; z-index: 1000; pointer-events: none;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 20, 25, .55); display: flex;
+  align-items: center; justify-content: center; z-index: 900;
+}
+.modal { background: #fff; border-radius: 10px; padding: 18px 20px; width: 380px; position: relative; }
+.modal .close { position: absolute; top: 8px; right: 10px; border: none; font-size: 18px; background: none; }
+.stars button { font-size: 22px; border: none; background: none; padding: 2px 4px; color: #c9a227; }

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inbox – Mock Mail</title>
+<link rel="stylesheet" href="../shared/base.css">
+<style>
+  .layout { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 47px - 28px); }
+  #list { overflow-y: auto; border-right: 1px solid #e3e5e8; background: #fff; margin: 0; padding: 0; }
+  #list li { list-style: none; padding: 8px 12px; border-bottom: 1px solid #eef0f2; cursor: pointer; }
+  #list li:hover { background: #f3f6fc; }
+  #list li.selected { background: #e8f0fe; }
+  #list li.unread .from, #list li.unread .subj { font-weight: 700; }
+  #list .row1 { display: flex; justify-content: space-between; }
+  #list .date { color: #6e7781; font-size: 12px; }
+  #list .subj { font-size: 13px; }
+  #list .prev { color: #6e7781; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #reader { overflow-y: auto; padding: 16px 20px; }
+  #reader h2 { margin: 0 0 4px; font-size: 18px; }
+  .meta { color: #57606a; margin-bottom: 12px; }
+  .actions { display: flex; gap: 8px; margin: 10px 0 14px; }
+  .body p { margin: 0 0 10px; }
+  #reply-body { width: 100%; height: 140px; }
+  .counts { color: #6e7781; font-size: 12px; padding: 6px 12px; background: #fafbfc; border-bottom: 1px solid #eef0f2; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">✉ Mock Mail</span>
+    <nav><a href="#/" class="active" id="nav-inbox">Inbox</a><a href="#/archived" id="nav-archived">Archived</a></nav>
+    <span class="user">Dana Whitlock · dana.whitlock@example.com</span>
+  </div>
+  <div class="layout">
+    <div>
+      <div class="counts" id="counts"></div>
+      <ul id="list"></ul>
+    </div>
+    <div id="reader"><p class="muted">Select a message to read it.</p></div>
+  </div>
+  <script src="../shared/hg.js"></script>
+  <script src="../shared/data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

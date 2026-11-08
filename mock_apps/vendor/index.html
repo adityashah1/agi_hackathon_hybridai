@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard – Acme Vendor Portal</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="vendor.css">
+</head>
+<body>
+  <main id="main">
+    <h1>Welcome back</h1>
+    <div class="card">
+      <h2>Open items</h2>
+      <p>2 invoices awaiting review · 1 purchase order open</p>
+      <p><a href="purchase-orders.html" id="dash-pos">View purchase orders</a> ·
+         <a href="invoices.html" id="dash-invoices">View invoices</a> ·
+         <a href="dispute.html" id="dash-dispute">Dispute a line item</a></p>
+    </div>
+    <div class="card">
+      <h2>Recent activity</h2>
+      <ul>
+        <li>Nov 3 – Invoice INV-2207 issued for PO-881</li>
+        <li>Nov 2 – Invoice INV-2214 issued for PO-890</li>
+        <li>Oct 31 – PO-881 shipped</li>
+      </ul>
+    </div>
+  </main>
+  <script src="../shared/hg.js"></script>
+  <script src="../shared/data.js"></script>
+  <script src="vendor.js"></script>
+  <script>VP.init("nav-dashboard");</script>
+</body>
+</html>

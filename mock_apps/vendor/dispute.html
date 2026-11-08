@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dispute a line item – Acme Vendor Portal</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="vendor.css">
+</head>
+<body>
+  <main id="main">
+    <h1>Dispute a line item</h1>
+    <div class="steps" id="steps">
+      <span data-s="1">1 Invoice</span><span data-s="2">2 Line item</span>
+      <span data-s="3">3 Date</span><span data-s="4">4 Reason</span>
+    </div>
+
+    <section class="card" id="step-1">
+      <label for="invoice">Which invoice?</label>
+      <select id="invoice">
+        <option value="">— Select an invoice —</option>
+        <option value="INV-2193">INV-2193 · Brightline Office Co. · Oct 14</option>
+        <option value="INV-2207">INV-2207 · Acme Supplies · Oct 28</option>
+        <option value="INV-2214">INV-2214 · Acme Supplies · Nov 2</option>
+      </select>
+      <div class="wizard-nav"><button id="next-1" class="primary" disabled>Next</button></div>
+    </section>
+
+    <section class="card" id="step-2" hidden>
+      <p class="muted" id="step2-invoice"></p>
+      <label for="line-item">Which line item is wrong?</label>
+      <select id="line-item" style="width:100%"></select>
+      <div class="wizard-nav"><button id="back-2">Back</button><button id="next-2" class="primary" disabled>Next</button></div>
+    </section>
+
+    <section class="card" id="step-3" hidden>
+      <label>When did you notice the discrepancy?</label>
+      <div class="cal" id="date-picker">
+        <div class="cal-head">
+          <button id="cal-prev" aria-label="Previous month">‹</button>
+          <b id="cal-month"></b>
+          <button id="cal-next" aria-label="Next month">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <p id="date-display" class="muted">No date selected.</p>
+      <div class="wizard-nav"><button id="back-3">Back</button><button id="next-3" class="primary" disabled>Next</button></div>
+    </section>
+
+    <section class="card" id="step-4" hidden>
+      <p class="muted" id="summary"></p>
+      <label for="reason">Reason for dispute</label>
+      <textarea id="reason" rows="4" style="width:100%" placeholder="Describe the problem (at least 10 characters)"></textarea>
+      <div class="error" id="reason-error"></div>
+      <div class="wizard-nav"><button id="back-4">Back</button><button id="submit-dispute" class="primary">Submit dispute</button></div>
+    </section>
+
+    <section class="card" id="step-done" hidden>
+      <h2 class="success">Dispute submitted</h2>
+      <p>Your case number is <b id="case-number"></b>. We'll reply within 5 business days.</p>
+      <p><a href="dispute.html" id="new-dispute">Start another dispute</a></p>
+    </section>
+  </main>
+  <script src="../shared/hg.js"></script>
+  <script src="../shared/data.js"></script>
+  <script src="vendor.js"></script>
+  <script>
+    VP.init("nav-dispute");
+    /* Completion: HG.confirm("dispute", [invoice, lineId, "YYYY-MM-DD"]). Reason text is not
+       part of the code, so graders check only the structured choices. */
+    document.addEventListener("DOMContentLoaded", () => {
+      const D = HG_DATA;
+      const $ = (id) => document.getElementById(id);
+      const TODAY = "2026-11-08";              // fixed "today" so runs are reproducible
+      const st = { invoice: "", line: "", date: "", month: [2026, 9] };  // month 0-based: Oct 2026
+
+      function show(step) {
+        ["1", "2", "3", "4", "done"].forEach((s) => ($("step-" + s).hidden = s !== step));
+        document.querySelectorAll("#steps span").forEach((sp) => sp.classList.toggle("on", sp.dataset.s === step));
+      }
+      function go(step) { location.hash = "#step-" + step; }
+      function route() {
+        const step = (location.hash.match(/^#step-(1|2|3|4|done)$/) || [])[1] || "1";
+        const need = { "2": st.invoice, "3": st.line, "4": st.date, "done": st.done };
+        if (step !== "1" && !need[step]) { history.replaceState(null, "", "#step-1"); show("1"); return; }
+        if (step === "2") fillLines();
+        if (step === "3") drawCal();
+        if (step === "4") $("summary").textContent = `${st.invoice} · line ${st.line} · noticed ${st.date}`;
+        show(step);
+        if (step === "done" && !st.confirmed) {
+          st.confirmed = true;
+          HG.confirm("dispute", [st.invoice, st.line, st.date]);
+        }
+      }
+
+      $("invoice").addEventListener("change", (e) => { st.invoice = e.target.value; st.line = ""; $("next-1").disabled = !st.invoice; });
+      $("next-1").addEventListener("click", () => go(2));
+
+      function fillLines() {
+        const inv = D.invoices[st.invoice];
+        $("step2-invoice").textContent = `${st.invoice} · ${inv.vendor}`;
+        $("line-item").innerHTML = '<option value="">— Select a line item —</option>' +
+          inv.lines.map((l) => `<option value="${l.id}" ${l.id === st.line ? "selected" : ""}>${l.desc}</option>`).join("");
+        $("next-2").disabled = !st.line;
+      }
+      $("line-item").addEventListener("change", (e) => { st.line = e.target.value; $("next-2").disabled = !st.line; });
+      $("back-2").addEventListener("click", () => go(1));
+      $("next-2").addEventListener("click", () => go(3));
+
+      const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const pad = (n) => String(n).padStart(2, "0");
+      function drawCal() {
+        const [y, m] = st.month;
+        $("cal-month").textContent = `${MONTHS[m]} ${y}`;
+        const first = new Date(Date.UTC(y, m, 1)).getUTCDay();
+        const days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+        let html = ["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => `<div class="dow">${d}</div>`).join("");
+        html += "<div></div>".repeat(first);
+        for (let d = 1; d <= days; d++) {
+          const iso = `${y}-${pad(m + 1)}-${pad(d)}`;
+          html += `<button id="day-${iso}" data-date="${iso}" class="${iso === st.date ? "sel" : ""}" ${iso > TODAY ? "disabled" : ""}>${d}</button>`;
+        }
+        $("cal-grid").innerHTML = html;
+        $("date-display").textContent = st.date ? "Selected: " + st.date : "No date selected.";
+        $("next-3").disabled = !st.date;
+      }
+      $("cal-prev").addEventListener("click", () => { const [y, m] = st.month; st.month = m ? [y, m - 1] : [y - 1, 11]; drawCal(); HG.log("calendar " + $("cal-month").textContent); });
+      $("cal-next").addEventListener("click", () => { const [y, m] = st.month; st.month = m < 11 ? [y, m + 1] : [y + 1, 0]; drawCal(); HG.log("calendar " + $("cal-month").textContent); });
+      $("cal-grid").addEventListener("click", (e) => { if (e.target.dataset.date) { st.date = e.target.dataset.date; drawCal(); } });
+      $("back-3").addEventListener("click", () => go(2));
+      $("next-3").addEventListener("click", () => go(4));
+
+      $("back-4").addEventListener("click", () => go(3));
+      $("submit-dispute").addEventListener("click", () => {
+        const reason = $("reason").value.trim();
+        if (reason.length < 10) { $("reason-error").textContent = "Please enter a reason of at least 10 characters."; return; }
+        $("reason-error").textContent = "";
+        const caseNo = "CASE-" + (1000 + Math.floor(Math.random() * 9000));
+        $("case-number").textContent = caseNo;
+        st.done = true;
+        window.__dispute = { invoice: st.invoice, line: st.line, date: st.date, reason: reason, case: caseNo };
+        go("done");   // route() shows the result and calls HG.confirm once
+      });
+
+      window.addEventListener("hashchange", route);
+      route();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings – Mock Account</title>
+<link rel="stylesheet" href="../shared/base.css">
+<style>
+  .layout { display: grid; grid-template-columns: 180px 1fr; gap: 16px; padding: 16px; }
+  .tabs a { display: block; padding: 8px 10px; border-radius: 6px; text-decoration: none; color: #1f2328; }
+  .tabs a.active { background: #e8f0fe; font-weight: 700; color: #0b57d0; }
+  section[hidden] { display: none; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .check { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 8px 0; }
+  .savebar { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
+  input[type=text], input[type=tel], input[type=email] { width: 100%; }
+  .input-error { border-color: #b42318; background: #fff6f5; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">⚙ Account Settings</span>
+    <span class="user">Dana Whitlock</span>
+  </div>
+  <div class="layout">
+    <nav class="tabs">
+      <a href="#profile" id="tab-profile">Profile</a>
+      <a href="#notifications" id="tab-notifications">Notifications</a>
+      <a href="#billing" id="tab-billing">Billing</a>
+      <a href="#security" id="tab-security">Security</a>
+    </nav>
+    <form id="settings-form" class="card" novalidate>
+      <section id="sec-profile">
+        <h2>Profile</h2>
+        <div class="row">
+          <div><label for="full-name">Full name</label><input id="full-name" type="text" value="Dana Whitlock"></div>
+          <div><label for="email">Email</label><input id="email" type="email" value="dana.whitlock@example.com"></div>
+        </div>
+        <label for="job-title">Job title</label><input id="job-title" type="text" value="Accounts Payable Specialist">
+      </section>
+
+      <section id="sec-notifications" hidden>
+        <h2>Notifications</h2>
+        <label class="check"><input type="checkbox" id="notif-digest" checked> Weekly email digest</label>
+        <label class="check"><input type="checkbox" id="notif-sms"> SMS alerts for disputes</label>
+        <label class="check"><input type="checkbox" id="notif-invoice" checked> Email me when an invoice arrives</label>
+      </section>
+
+      <section id="sec-billing" hidden>
+        <h2>Billing</h2>
+        <label for="billing-phone">Billing phone</label>
+        <input id="billing-phone" type="tel" placeholder="Phone number" autocomplete="off">
+        <div class="error" id="phone-error"></div>
+        <label for="billing-address">Billing address</label>
+        <input id="billing-address" type="text" value="200 Example Street, Suite 4, Springfield">
+        <label for="currency">Currency</label>
+        <select id="currency"><option>USD</option><option>EUR</option><option>GBP</option></select>
+      </section>
+
+      <section id="sec-security" hidden>
+        <h2>Security</h2>
+        <label class="check"><input type="checkbox" id="twofa"> Require two-factor authentication</label>
+        <label for="session-timeout">Sign out after inactivity</label>
+        <select id="session-timeout">
+          <option value="15">15 minutes</option><option value="30" selected>30 minutes</option>
+          <option value="60">1 hour</option><option value="240">4 hours</option>
+        </select>
+      </section>
+
+      <div class="savebar">
+        <button type="submit" id="save-settings" class="primary">Save changes</button>
+        <span id="save-status"></span>
+      </div>
+    </form>
+  </div>
+  <script src="../shared/hg.js"></script>
+  <script>
+    /* Billing phone REJECTS the natural first format (e.g. "415-555-0123" or "(415) 555-0123")
+       and only accepts international format without spaces, e.g. +14155550123.
+       Completion: HG.confirm("settings", [phone, digest, sms, timeout, twofa]) on a valid save. */
+    document.addEventListener("DOMContentLoaded", () => {
+      const $ = (id) => document.getElementById(id);
+      const TABS = ["profile", "notifications", "billing", "security"];
+      function route() {
+        const t = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "profile";
+        TABS.forEach((x) => { $("sec-" + x).hidden = x !== t; $("tab-" + x).classList.toggle("active", x === t); });
+      }
+      window.addEventListener("hashchange", route);
+      route();
+
+      const PHONE_OK = /^\+[1-9]\d{7,14}$/;
+      $("billing-phone").addEventListener("input", () => {
+        $("billing-phone").classList.remove("input-error");
+        $("phone-error").textContent = "";
+      });
+      $("settings-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        $("save-status").textContent = "";
+        const phone = $("billing-phone").value.trim();
+        let err = "";
+        if (!phone) err = "Billing phone is required.";
+        else if (!PHONE_OK.test(phone)) err = "Invalid phone number format. Use international format, e.g. +14155550123.";
+        if (err) {
+          $("phone-error").textContent = err;
+          $("billing-phone").classList.add("input-error");
+          if (location.hash !== "#billing") location.hash = "#billing";
+          $("save-status").innerHTML = '<span class="error">Fix the errors above.</span>';
+          HG.log("error #billing-phone: " + err);
+          return;
+        }
+        $("save-status").innerHTML = '<span class="success">Settings saved.</span>';
+        HG.confirm("settings", [phone, $("notif-digest").checked ? "1" : "0", $("notif-sms").checked ? "1" : "0",
+                                $("session-timeout").value, $("twofa").checked ? "1" : "0"]);
+      });
+    });
+  </script>
+</body>
+</html>
