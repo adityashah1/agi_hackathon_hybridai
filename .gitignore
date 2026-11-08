@@ -20,3 +20,6 @@ models/
 
 # macOS
 .DS_Store
+
+# Sai lease state (machine id, local only)
+data/lease.json

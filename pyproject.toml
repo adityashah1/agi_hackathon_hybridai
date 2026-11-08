@@ -17,6 +17,10 @@ dependencies = [
 local = [
     "mlx-vlm",
 ]
+# Local GUI environment (env/local_env.py). After install: python -m playwright install chromium
+local-env = [
+    "playwright>=1.47",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.5",
