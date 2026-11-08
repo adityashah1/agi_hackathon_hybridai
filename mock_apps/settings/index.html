@@ -15,6 +15,10 @@
   .savebar { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
   input[type=text], input[type=tel], input[type=email] { width: 100%; }
   .input-error { border-color: #b42318; background: #fff6f5; }
+  .clearable { position: relative; }
+  .clearable input { padding-right: 34px; }
+  .clearable .clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    border: none; background: #e9ecef; border-radius: 50%; width: 24px; height: 24px; padding: 0; line-height: 24px; }
 </style>
 </head>
 <body>
@@ -49,10 +53,10 @@
       <section id="sec-billing" hidden>
         <h2>Billing</h2>
         <label for="billing-phone">Billing phone</label>
-        <input id="billing-phone" type="tel" placeholder="Phone number" autocomplete="off">
+        <div class="clearable"><input id="billing-phone" type="tel" placeholder="Phone number" autocomplete="off" value="+14155550100"><button type="button" class="clear" id="clear-billing-phone" data-for="billing-phone" aria-label="Clear phone">×</button></div>
         <div class="error" id="phone-error"></div>
         <label for="billing-address">Billing address</label>
-        <input id="billing-address" type="text" value="200 Example Street, Suite 4, Springfield">
+        <div class="clearable"><input id="billing-address" type="text" value="200 Example Street, Suite 4, Springfield"><button type="button" class="clear" id="clear-billing-address" data-for="billing-address" aria-label="Clear address">×</button></div>
         <label for="currency">Currency</label>
         <select id="currency"><option>USD</option><option>EUR</option><option>GBP</option></select>
       </section>
@@ -77,7 +81,8 @@
   <script>
     /* Billing phone REJECTS the natural first format (e.g. "415-555-0123" or "(415) 555-0123")
        and only accepts international format without spaces, e.g. +14155550123.
-       Completion: HG.confirm("settings", [phone, digest, sms, timeout, twofa]) on a valid save. */
+       Completion on a valid save:
+         HG.confirm("settings", [phone, digest, sms, timeout, twofa, billingAddress]) */
     document.addEventListener("DOMContentLoaded", () => {
       const $ = (id) => document.getElementById(id);
       const TABS = ["profile", "notifications", "billing", "security"];
@@ -87,6 +92,14 @@
       }
       window.addEventListener("hashchange", route);
       route();
+
+      // "×" buttons clear a field and focus it (agents have no select-all key combo).
+      document.querySelectorAll(".clear").forEach((b) => b.addEventListener("click", () => {
+        const inp = $(b.dataset.for);
+        inp.value = "";
+        inp.dispatchEvent(new Event("input", { bubbles: true }));
+        inp.focus();
+      }));
 
       const PHONE_OK = /^\+[1-9]\d{7,14}$/;
       $("billing-phone").addEventListener("input", () => {
@@ -110,7 +123,8 @@
         }
         $("save-status").innerHTML = '<span class="success">Settings saved.</span>';
         HG.confirm("settings", [phone, $("notif-digest").checked ? "1" : "0", $("notif-sms").checked ? "1" : "0",
-                                $("session-timeout").value, $("twofa").checked ? "1" : "0"]);
+                                $("session-timeout").value, $("twofa").checked ? "1" : "0",
+                                $("billing-address").value.trim().replace(/\s+/g, " ")]);
       });
     });
   </script>

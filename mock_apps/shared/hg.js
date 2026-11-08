@@ -12,7 +12,11 @@
 (function () {
   "use strict";
   if (new URLSearchParams(location.search).has("reset")) {
-    try { sessionStorage.clear(); } catch (e) {}
+    try {
+      sessionStorage.clear();
+      // cross-app state (e.g. the last dispute's case number, read by the inbox)
+      Object.keys(localStorage).filter((k) => k.startsWith("hg_")).forEach((k) => localStorage.removeItem(k));
+    } catch (e) {}
   }
 
   function fnv1a(s) {
@@ -86,5 +90,11 @@
     nav(location.pathname + location.hash);
   });
 
-  window.HG = { log: log, confirm: confirmTask, code: code, nav: nav, describe: describe };
+  // Reply bodies are normalized before hashing (mirrors codes.normalize_reply):
+  // trim, lowercase, collapse whitespace, drop trailing . or !
+  function normReply(s) {
+    return s.trim().toLowerCase().replace(/\s+/g, " ").replace(/[.!\s]+$/, "");
+  }
+
+  window.HG = { log: log, confirm: confirmTask, code: code, nav: nav, describe: describe, normReply: normReply };
 })();

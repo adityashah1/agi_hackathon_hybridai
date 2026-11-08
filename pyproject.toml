@@ -10,6 +10,7 @@ dependencies = [
     "numpy>=1.26",
     "pandas>=2.1",
     "matplotlib>=3.8",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -20,6 +21,10 @@ local = [
 # Local GUI environment (env/local_env.py). After install: python -m playwright install chromium
 local-env = [
     "playwright>=1.47",
+]
+# macOS Vision OCR for reading the event-log line and CONFIRM codes (tasks/checkers.py)
+ocr = [
+    "ocrmac>=1.0",
 ]
 dev = [
     "pytest>=8.0",

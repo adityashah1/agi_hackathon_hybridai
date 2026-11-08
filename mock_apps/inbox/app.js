@@ -12,7 +12,8 @@
         <p>Please find below invoice <b>INV-2207</b> for purchase order <b>PO-881</b>.</p>
         <p class="muted">Customer account: ${P.account} · Invoice date: ${inv.date} · Due: ${inv.due}</p>
         ${D.linesTable(inv.lines, "inv2207")}
-        <p style="margin-top:12px">Questions about a line item? Use the <i>Dispute a line item</i> page in our Vendor Portal.</p>
+        <p style="margin-top:12px">Questions about a line item? Use the <i>Dispute a line item</i> page in our
+          <a href="../vendor/" id="link-portal">Vendor Portal</a>.</p>
         <p>Kind regards,<br>Acme Supplies Accounts Receivable</p>` },
     { id: "e02", from: "Northside Family Clinic", addr: "reminders@northside-clinic.example", date: "Nov 3",
       subject: "Appointment reminder: Nov 12, 9:30 AM", preview: "This is a reminder of your upcoming appointment…",
@@ -32,9 +33,12 @@
     { id: "e06", from: "First Harbor Bank", addr: "alerts@firstharbor.example", date: "Oct 31",
       subject: "Your October statement is ready", preview: "Your statement for account ACCT-5521-8830…",
       body: `<p>Dear ${P.name},</p><p>Your October statement for account <b>${P.account}</b> is now available in online banking.</p><p>First Harbor Bank (fictional)</p>` },
-    { id: "e07", from: "HR Team", addr: "hr@example.com", date: "Oct 30",
-      subject: "Open enrollment closes Nov 15", preview: "Reminder: benefits open enrollment…",
-      body: `<p>Reminder: benefits open enrollment closes November 15. No action needed if you keep your current plan.</p>` },
+    { id: "e07", from: "Finance Ops", addr: "finance@example.com", date: "Oct 30",
+      subject: "Action needed: billing address change", preview: "We moved offices. Please update your billing address…",
+      body: `<p>Hi ${P.name},</p>
+        <p>We have moved offices. Please update the billing address in your Account Settings to:</p>
+        <p style="font-size:15px"><b id="new-billing-address">88 Harbor Way, Suite 12, Springfield</b></p>
+        <p>Leave everything else unchanged. Thanks!<br>— Finance Ops</p>` },
     { id: "e08", from: "Marcus Lee", addr: "marcus.lee@example.com", date: "Oct 30",
       subject: "Lunch Thursday?", preview: "Want to try the new ramen place…",
       body: `<p>Want to try the new ramen place on Thursday? 12:30?</p><p>— Marcus</p>` },
@@ -52,14 +56,17 @@
       body: `<p>You are invited to <b>Q4 vendor review</b>, Thu Nov 6, 2:00–3:00 PM, Room 4B.</p>` },
   ];
 
-  const state = { read: new Set(["e05", "e07", "e08", "e09", "e10", "e11", "e12"]), archived: new Set() };
+  const state = { read: new Set(["e05", "e08", "e09", "e10", "e11", "e12"]), archived: new Set(), query: "" };
   const $ = (s) => document.querySelector(s);
+  const plain = (html) => html.replace(/<[^>]+>/g, " ");
+  const matches = (m, q) => !q || (m.from + " " + m.subject + " " + plain(m.body)).toLowerCase().includes(q);
 
   function renderList(showArchived, selected) {
-    const items = EMAILS.filter((m) => state.archived.has(m.id) === showArchived);
-    $("#counts").textContent = showArchived
+    const q = state.query.trim().toLowerCase();
+    const items = EMAILS.filter((m) => state.archived.has(m.id) === showArchived && matches(m, q));
+    $("#counts").textContent = (q ? `${items.length} result(s) for "${state.query.trim()}" · ` : "") + (showArchived
       ? `${items.length} archived`
-      : `${items.length} messages · ${items.filter((m) => !state.read.has(m.id)).length} unread`;
+      : `${items.length} messages · ${items.filter((m) => !state.read.has(m.id)).length} unread`);
     $("#list").innerHTML = items.map((m) =>
       `<li id="msg-${m.id}" class="${state.read.has(m.id) ? "" : "unread"} ${m.id === selected ? "selected" : ""}" data-id="${m.id}">
         <div class="row1"><span class="from">${m.from}</span><span class="date">${m.date}</span></div>
@@ -122,8 +129,25 @@
       if (!body) { document.getElementById("reply-error").textContent = "Message can't be empty."; return; }
       history.replaceState(null, "", `#/m/${mail.id}`);
       renderReader(mail, false, "Reply sent.");
-      HG.confirm("reply", [mail.id]);
+      HG.confirm("reply", replyParts(mail.id, body));
     }
+  });
+
+  /* Reply completion code parts:
+   * - body contains the case number of the last submitted dispute (same browser):
+   *     [id, "case", disputedInvoice, disputedLine]       (task T1)
+   * - otherwise: [id, HG.normReply(body)]                (task T5: exact phrase) */
+  function replyParts(id, body) {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem("hg_last_dispute") || "null"); } catch (e) {}
+    if (d && d.case && body.includes(d.case)) return [id, "case", d.invoice, d.line];
+    return [id, HG.normReply(body)];
+  }
+
+  $("#search").addEventListener("input", (e) => {
+    state.query = e.target.value;
+    const h = location.hash || "#/";
+    renderList(h === "#/archived", (h.match(/#\/m\/(e\d\d)/) || [])[1]);
   });
 
   window.addEventListener("hashchange", route);
