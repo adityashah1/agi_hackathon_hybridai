@@ -1,0 +1,26 @@
+# Assumptions for MODELED cloud energy (Sai). See CLAUDE.md rule 5: cloud energy is always
+# "modeled" and always a low–high range, never a single value.
+#
+# >>> YOU must fill these in from a CITED source: a paper, report or vendor disclosure.
+# >>> Give the URL and the exact table, figure or sentence each number comes from.
+# >>> Never invent or "estimate" them. Until every field below is filled in,
+# >>> profiler/cloud.py refuses to model cloud energy and records None.
+#
+# Notes for whoever fills this in:
+# - Say what the figure covers: inference only, or with datacenter overhead (PUE);
+#   which model size or class; which hardware.
+# - cloud.py uses wh_per_1k_tokens when Sai reports tokens (input + output together).
+#   It falls back to wh_per_model_call when only model-call counts are available.
+# - Energy for the Sai cloud computer (VM) itself is NOT modeled here.
+
+wh_per_1k_tokens:
+  low: TODO        # Wh per 1,000 tokens, low end
+  high: TODO       # Wh per 1,000 tokens, high end
+  source: TODO     # citation + URL + table/figure
+  covers: TODO     # e.g. "GPU inference only, 70B-class model, excludes PUE"
+
+wh_per_model_call:
+  low: TODO        # Wh per model call, low end
+  high: TODO       # Wh per model call, high end
+  source: TODO
+  covers: TODO
