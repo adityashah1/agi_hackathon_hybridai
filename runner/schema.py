@@ -88,6 +88,12 @@ class StepRecord:
     pii_strings_visible: list[str] = field(default_factory=list)
     injection_visible: bool = False
 
+    # post-action check (added for runner/collect.py; optional, so older logs still load)
+    # phash_distance: measured dHash-32 bit distance between the before/after screenshots,
+    # excluding the bottom 30 px (event-log bar). screen_changed = phash_distance >= threshold.
+    phash_distance: Optional[int] = None
+    screen_changed: Optional[bool] = None
+
     def validate(self) -> None:
         if self.gate_decision not in _GATE_DECISIONS:
             raise ValueError(f"gate_decision must be one of {_GATE_DECISIONS}: {self.gate_decision!r}")

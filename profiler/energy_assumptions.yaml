@@ -19,8 +19,22 @@ wh_per_1k_tokens:
   source: TODO     # citation + URL + table/figure
   covers: TODO     # e.g. "GPU inference only, 70B-class model, excludes PUE"
 
+# Chosen 2026-11-08 ("Option A"). Sai's own calls measured ~1.6-1.9k input / ~70-100 output tokens
+# each (turn usage, free plan, model "auto"). The backend model is unknown, hence the wide range.
 wh_per_model_call:
-  low: TODO        # Wh per model call, low end
-  high: TODO       # Wh per model call, high end
-  source: TODO
-  covers: TODO
+  low: 0.24
+  high: 2.989
+  source: >-
+    LOW: Elsworth et al. (Google), "Measuring the environmental impact of delivering AI at Google
+    Scale", arXiv:2508.15734 v1 (21 Aug 2025), Table 1 / Sec. 4.1: median Gemini Apps text prompt =
+    0.24 Wh (comprehensive methodology, May 2025), https://arxiv.org/abs/2508.15734 .
+    HIGH: Jegham et al., "How Hungry is AI? Benchmarking Energy, Water, and Carbon Footprint of LLM
+    Inference", arXiv:2505.09598 v6 (24 Nov 2025), Table 4: Claude-3.7 Sonnet, medium prompt
+    (1,000 input / 1,000 output tokens) = 2.989 +/- 0.201 Wh, https://arxiv.org/abs/2505.09598 .
+  covers: >-
+    LOW is measured production telemetry: active accelerators + host CPU/DRAM + idle machines +
+    datacenter overhead (PUE); excludes training, external networking and end-user devices; text
+    prompts only (no token count published). HIGH is an estimate from public API latency/throughput
+    on DGX H100/H200-class hardware, including PUE (AWS ~1.14) and a fixed non-GPU share, excluding
+    idle power, batch size 8; it assumes more output (1,000 tokens) than Sai's calls produce, so it
+    leans high. Neither source covers Sai/Simular directly, nor the Sai cloud computer (VM).

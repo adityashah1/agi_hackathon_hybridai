@@ -103,6 +103,29 @@ class LocalEnv:
     def url(self) -> str:
         return self._page.url
 
+    def settle(self, timeout_ms: int = 5000) -> None:
+        """Best-effort wait for a navigation the last action may have started."""
+        try:
+            self._page.wait_for_load_state("load", timeout=timeout_ms)
+        except Exception:  # noqa: BLE001
+            pass
+
+    def element_at(self, x: int, y: int) -> Optional[str]:
+        """A short descriptor of the clickable element at (x, y) in screenshot pixels
+        (1:1 with CSS px here). On the mock apps it's the same text the event log would show."""
+        try:
+            return self._page.evaluate(
+                """([x, y]) => {
+                  const el = document.elementFromPoint(x, y);
+                  if (!el) return null;
+                  if (window.HG) return HG.describe(el);
+                  const t = el.closest('button,a,input,select,textarea,label,[role=button],li,tr,td,th') || el;
+                  const txt = (t.innerText || t.value || '').trim().replace(/\\s+/g, ' ').slice(0, 40);
+                  return t.tagName.toLowerCase() + (t.id ? '#' + t.id : '') + (txt ? ' "' + txt + '"' : '');
+                }""", [int(x), int(y)])
+        except Exception:  # noqa: BLE001
+            return None
+
     def screenshot(self, tag: str | None = None) -> Image.Image:
         raw = self._timed("screenshot", self._page.screenshot, type="png")
         img = Image.open(io.BytesIO(raw))
@@ -141,6 +164,8 @@ class LocalEnv:
             dx, dy = int(action.get("dx", 0)), int(action.get("dy", 0))
             if not (dx or dy):
                 raise ValueError("scroll needs nonzero dx or dy")
+            if action.get("x") is not None and action.get("y") is not None:
+                self._mouse = (int(action["x"]), int(action["y"]))
             m.move(*self._mouse)
             self._timed("act_scroll", m.wheel, dx * NOTCH_PX, dy * NOTCH_PX)
         else:
