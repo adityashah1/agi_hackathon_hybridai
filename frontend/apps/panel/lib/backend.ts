@@ -28,6 +28,10 @@ const TRAILING_SLASH = /\/$/;
  * {MOCK_BASE} in tasks/tasks.yaml; the Sai cloud computer cannot reach
  * localhost), else this port on localhost. Passed to every job.
  */
+/** MOCK_BASE when it is set explicitly, for links that leave this host; else null. */
+export const configuredMockBase = (): string | null =>
+  env.MOCK_BASE ? env.MOCK_BASE.replace(TRAILING_SLASH, "") : null;
+
 export const mockBase = (): string =>
   (env.MOCK_BASE ?? `http://localhost:${mockAppsPort()}`).replace(
     TRAILING_SLASH,

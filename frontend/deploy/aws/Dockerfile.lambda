@@ -1,0 +1,21 @@
+# The panel as an AWS Lambda container image (Function URL behind CloudFront).
+# Same staged inputs as Dockerfile (see build-image.sh). The Lambda Web Adapter
+# turns Function URL events into HTTP requests to the Next.js server on PORT.
+FROM node:20-slim
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 /lambda-adapter /opt/extensions/lambda-adapter
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    HOSTNAME=0.0.0.0 \
+    PORT=3000 \
+    AWS_LWA_READINESS_CHECK_PATH=/icon.svg \
+    REPO_ROOT=/app/repo \
+    RUNS_DIR=/tmp/runs
+
+WORKDIR /app
+COPY standalone/ ./
+COPY static/ ./apps/panel/.next/static/
+COPY public/ ./apps/panel/public/
+COPY repo/ ./repo/
+# Lambda's filesystem is read-only except /tmp: uploaded runs go to /tmp/runs and job logs are dropped.
+CMD ["node", "apps/panel/server.js"]

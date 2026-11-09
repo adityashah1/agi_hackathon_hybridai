@@ -39,7 +39,7 @@ import { MockAppLink } from "@/components/mock-app-link";
 import { PageHeader } from "@/components/page-header";
 import { RunBar } from "@/components/run-bar";
 import { StepLoop } from "@/components/step-loop";
-import { mockAppsPort } from "@/lib/backend";
+import { configuredMockBase, mockAppsPort } from "@/lib/backend";
 import {
   HERO_STAGES,
   KIND_LABEL,
@@ -169,7 +169,7 @@ const LABEL_RULES = [
 
 const MOCK_PATH = /\/(inbox|vendor|settings)\//;
 
-const StageCards = ({ port }: { port: number }) => (
+const StageCards = ({ base, port }: { base: string | null; port: number }) => (
   <ol className="grid gap-3 md:grid-cols-3">
     {HERO_STAGES.map((s) => (
       <li key={s.stage}>
@@ -180,6 +180,7 @@ const StageCards = ({ port }: { port: number }) => (
                 {s.stage}
               </span>
               <MockAppLink
+                base={base}
                 className="font-mono text-[11px] text-muted-foreground hover:text-foreground"
                 label={s.app}
                 path={s.path}
@@ -206,7 +207,13 @@ const StageCards = ({ port }: { port: number }) => (
   </ol>
 );
 
-const ObstaclesCard = ({ port }: { port: number }) => (
+const ObstaclesCard = ({
+  base,
+  port,
+}: {
+  base: string | null;
+  port: number;
+}) => (
   <Card className="gap-2">
     <CardHeader>
       <CardTitle className="text-base">
@@ -214,11 +221,21 @@ const ObstaclesCard = ({ port }: { port: number }) => (
       </CardTitle>
       <CardDescription>
         {SCENARIO.mismatch} The apps are static pages in mock_apps/, sized for a
-        1024×768 viewport. Serve them with{" "}
-        <code className="font-mono text-xs">
-          {MOCK_APPS_SERVE_COMMAND(port)}
-        </code>
-        .
+        1024×768 viewport.{" "}
+        {base ? (
+          <>
+            This panel links to the copy served at{" "}
+            <code className="font-mono text-xs">{base}/</code>.
+          </>
+        ) : (
+          <>
+            Serve them with{" "}
+            <code className="font-mono text-xs">
+              {MOCK_APPS_SERVE_COMMAND(port)}
+            </code>
+            .
+          </>
+        )}
       </CardDescription>
     </CardHeader>
     <CardContent className="grid gap-4 text-xs lg:grid-cols-2">
@@ -311,11 +328,20 @@ const ObstaclesCard = ({ port }: { port: number }) => (
   </Card>
 );
 
-const TaskApp = ({ task, port }: { task: SuiteTask; port: number }) => {
+const TaskApp = ({
+  base,
+  task,
+  port,
+}: {
+  base: string | null;
+  task: SuiteTask;
+  port: number;
+}) => {
   if (task.mock) {
     const m = MOCK_PATH.exec(task.start_url);
     return (
       <MockAppLink
+        base={base}
         className="hover:text-foreground"
         label={task.app}
         path={m?.[1] ? `${m[1]}/` : ""}
@@ -336,7 +362,15 @@ const TaskApp = ({ task, port }: { task: SuiteTask; port: number }) => {
   );
 };
 
-const SuiteTable = ({ suite, port }: { suite: LoadedSuite; port: number }) => (
+const SuiteTable = ({
+  base,
+  suite,
+  port,
+}: {
+  base: string | null;
+  suite: LoadedSuite;
+  port: number;
+}) => (
   <Card className="gap-2">
     <CardHeader>
       <CardTitle className="flex flex-wrap items-center gap-2 text-base">
@@ -415,7 +449,7 @@ const SuiteTable = ({ suite, port }: { suite: LoadedSuite; port: number }) => (
                 </Badge>
               </TableCell>
               <TableCell className="text-muted-foreground text-xs">
-                <TaskApp port={port} task={t} />
+                <TaskApp base={base} port={port} task={t} />
               </TableCell>
               <TableCell className="tabular text-right font-mono text-xs">
                 ≤{t.max_steps}
@@ -440,6 +474,7 @@ const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
     loadSuite(),
   ]);
   const port = mockAppsPort();
+  const base = configuredMockBase();
   const sums = summarizeAll(ctx.run.steps);
   const hybrid = sums.find((s) => s.mode === ctx.hybridMode);
   const local = sums.find((s) => s.mode === "local_only");
@@ -516,8 +551,8 @@ const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
               for the final code to match.
             </p>
           </div>
-          <StageCards port={port} />
-          <ObstaclesCard port={port} />
+          <StageCards base={base} port={port} />
+          <ObstaclesCard base={base} port={port} />
         </section>
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -559,7 +594,7 @@ const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
           />
         </section>
 
-        <SuiteTable port={port} suite={suite} />
+        <SuiteTable base={base} port={port} suite={suite} />
 
         <section className="flex flex-col gap-3">
           <div>

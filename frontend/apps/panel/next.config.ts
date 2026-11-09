@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
   ...config,
   // The panel ships no PostHog, so drop the ingest rewrites next-forge adds.
   rewrites: undefined,
+  // Self-contained server for the container image (frontend/deploy/aws).
+  // `node apps/panel/server.js` in .next/standalone runs the whole panel.
+  output: "standalone",
+  outputFileTracingRoot: monorepoRoot,
   turbopack: { root: monorepoRoot },
   allowedDevOrigins: [...lanAddresses, "*.local", "localhost"],
 };
