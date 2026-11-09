@@ -1,0 +1,14 @@
+{
+  "name": "backend",
+  "private": true,
+  "type": "module",
+  "description": "Turborepo handle on the Python side of hybrid-gate (brain/, env/, runner/ at the repo root). Scripts run from the repo root with the project's interpreter.",
+  "scripts": {
+    "test": "node run.mjs --needs pytest -- -m pytest -q",
+    "lint": "node run.mjs --needs ruff -- -m ruff check .",
+    "typecheck": "node run.mjs --needs requests -- -c \"import brain.local_brain, env.sai_env, runner.schema; print('backend imports ok')\"",
+    "bench": "node run.mjs --needs requests -- -m brain.bench",
+    "smoke": "node run.mjs --needs playwright -- -m env.smoke_test --env local",
+    "setup": "node run.mjs --setup"
+  }
+}
