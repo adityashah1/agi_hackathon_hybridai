@@ -77,10 +77,14 @@ export interface StepRecord {
   local_tokens_out: number;
   mode: Mode;
 
+  // post-action check (runner/collect.py): dHash-32 distance, measured; null in older logs
+  phash_distance: number | null;
+
   // privacy exposure
   pii_strings_visible: string[];
   // identity
   run_id: string;
+  screen_changed: boolean | null;
   screenshot_hash: string;
 
   // observation

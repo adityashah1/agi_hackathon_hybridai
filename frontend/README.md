@@ -14,7 +14,8 @@ Frontend only (works on any machine with Node 20+ and pnpm via corepack):
 ```bash
 cd frontend
 pnpm install
-pnpm dev          # http://localhost:3000, also reachable on the LAN (-H 0.0.0.0)
+pnpm dev          # http://localhost:3000 (bound to 127.0.0.1 only: /api/jobs can launch
+                  # model jobs and Sai tasks and has no auth, so don't expose it on a network)
 ```
 
 The full integration, from `frontend/`:

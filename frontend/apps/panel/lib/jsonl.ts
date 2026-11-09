@@ -68,6 +68,10 @@ export const StepRecordSchema = z.object({
 
   pii_strings_visible: z.array(z.string()).default([]),
   injection_visible: z.boolean().default(false),
+
+  // post-action check written by runner/collect.py (null in older logs)
+  phash_distance: z.number().int().nullable().default(null),
+  screen_changed: z.boolean().nullable().default(null),
 });
 
 const KNOWN_KEYS = new Set(Object.keys(StepRecordSchema.shape));

@@ -302,6 +302,9 @@ const generateEpisode = (
       handoff_tokens: sai ? Math.round(between(rand, 1500, 2600)) : 0,
       pii_strings_visible: isLast ? [] : scripted.pii,
       injection_visible: scripted.injection,
+      // not scripted in the sample run (no screenshots to compare)
+      phash_distance: null,
+      screen_changed: null,
     });
   }
 
