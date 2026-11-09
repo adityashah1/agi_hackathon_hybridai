@@ -82,7 +82,18 @@ export const BackendStatus = ({ initial }: { initial: Status }) => {
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2">
-      <span className="mr-1 font-medium text-xs">Backend on this machine</span>
+      <span className="mr-1 font-medium text-xs">
+        {status.readOnly
+          ? "Backend of this hosted copy"
+          : "Backend on this machine"}
+      </span>
+      {status.readOnly ? (
+        <Chip
+          detail="PANEL_READ_ONLY=1: this copy has no Python backend and refuses job launches, uploads and spec writes. Run the panel locally for those."
+          label="Read-only hosted copy"
+          ok={false}
+        />
+      ) : null}
       <Chip
         detail={
           status.python.ok

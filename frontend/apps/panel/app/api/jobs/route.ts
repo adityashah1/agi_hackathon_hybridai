@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { READ_ONLY_MESSAGE, readOnly } from "@/lib/backend";
 import { JobError, listJobs, type StartJobRequest, startJob } from "@/lib/jobs";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +9,9 @@ export const GET = () => NextResponse.json({ jobs: listJobs() });
 
 /** POST /api/jobs {kind, ...} → launch an allow-listed Python entry point. */
 export const POST = async (req: Request) => {
+  if (readOnly()) {
+    return NextResponse.json({ error: READ_ONLY_MESSAGE }, { status: 403 });
+  }
   let body: StartJobRequest;
   try {
     body = (await req.json()) as StartJobRequest;

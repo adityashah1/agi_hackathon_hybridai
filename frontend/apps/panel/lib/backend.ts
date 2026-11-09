@@ -28,6 +28,11 @@ const TRAILING_SLASH = /\/$/;
  * {MOCK_BASE} in tasks/tasks.yaml; the Sai cloud computer cannot reach
  * localhost), else this port on localhost. Passed to every job.
  */
+/** PANEL_READ_ONLY=1: the hosted demo. POST routes that launch, upload or write refuse. */
+export const readOnly = (): boolean => env.PANEL_READ_ONLY === "1";
+export const READ_ONLY_MESSAGE =
+  "This hosted copy is read-only: it has no Python backend, so job launches, uploads and spec writes are disabled. Run the panel locally for those.";
+
 /** MOCK_BASE when it is set explicitly, for links that leave this host; else null. */
 export const configuredMockBase = (): string | null =>
   env.MOCK_BASE ? env.MOCK_BASE.replace(TRAILING_SLASH, "") : null;
@@ -75,6 +80,8 @@ export interface BackendStatus {
   mockApps: { base: string; present: boolean; running: boolean; port: number };
   ollama: { running: boolean; version: string | null };
   python: { bin: string; version: string | null; ok: boolean };
+  /** PANEL_READ_ONLY=1: launches, uploads and spec writes are refused. */
+  readOnly: boolean;
   repoRoot: string;
   runDirs: number;
   /** runner/run.py exists, so "Start run" can launch it. */
@@ -221,6 +228,7 @@ export const getBackendStatus = async (
     ]);
   const status: BackendStatus = {
     checkedAt: new Date().toISOString(),
+    readOnly: readOnly(),
     repoRoot: repoRoot(),
     python: { bin, version: py.version, ok: py.version !== null },
     deps: py.deps,

@@ -9,7 +9,7 @@ both, so the suite's `{MOCK_BASE}` resolves to a public address the Sai cloud co
 | Public URL | `https://d2mtp1n5q1cktr.cloudfront.net/` (distribution `E74RXKVEPETEE`) |
 | Mock apps | `https://d2mtp1n5q1cktr.cloudfront.net/mock/` → S3 `hybrid-gate-mock-apps-383845656169` (prefix `mock/`, OAC `E2WPZRM30DWE4`, CloudFront Function `hybrid-gate-mock-index` adds `index.html`) |
 | Panel | Lambda `hybrid-gate-panel` (arm64, 2048 MB, 60 s) from ECR `hybrid-gate-panel:lambda`; role `hybrid-gate-panel-lambda`; HTTP API `5584ug7nse` (`https://5584ug7nse.execute-api.us-east-1.amazonaws.com`, `$default` route, payload v2) |
-| Lambda env | `MOCK_BASE=https://d2mtp1n5q1cktr.cloudfront.net/mock`, `RUNS_DIR=/tmp/runs`, `REPO_ROOT=/app/repo` |
+| Lambda env | `MOCK_BASE=https://d2mtp1n5q1cktr.cloudfront.net/mock`, `PANEL_READ_ONLY=1`, `RUNS_DIR=/tmp/runs`, `REPO_ROOT=/app/repo` |
 
 Everything is tagged `Project=hybrid-gate`. App Runner was the first choice (always warm) but this
 account cannot create App Runner services, so the amd64 image `hybrid-gate-panel:latest` and the
@@ -22,11 +22,13 @@ avoids with a grant scoped to the API's ARN.
 - Every screen works on the sample run; the overview reads `tasks/tasks.yaml` from the image and
   links the mock apps at `/mock/…`. The backend status strip reports the truth: no Python, no
   runner, no Ollama, no Sai key; mock apps reachable.
-- Lambda's filesystem is read-only except `/tmp`: **Load steps.jsonl** stores the run in
-  `/tmp/runs` of that one container (it disappears on a cold start), the intake's spec file write
-  fails with the usual toast, and job launches fail at spawn. Request and response bodies are
-  capped at 6 MB (Lambda) and the API Gateway integration times out at 30 s. The first request
-  after a few idle minutes takes 2–3 s (cold start).
+- `PANEL_READ_ONLY=1`: `/api/jobs` has no auth and could otherwise launch model jobs or Sai
+  tasks, so on the hosted copy `POST /api/jobs`, `POST /api/runs` (upload) and `POST /api/spec`
+  answer 403 with a plain message, the Benchmarks buttons are disabled with that reason, and the
+  status strip shows a "Read-only hosted copy" chip. Lambda's filesystem would be read-only except
+  `/tmp` anyway. Request and response bodies are capped at 6 MB (Lambda) and the API Gateway
+  integration times out at 30 s. The first request after a few idle minutes takes 2–3 s (cold
+  start).
 - The default cache behavior does not cache, so the panel is always fresh. `/_next/static/*` and
   `/mock/*` are cached; after re-syncing the mock apps, invalidate `/mock/*`.
 
@@ -70,7 +72,7 @@ aws cloudfront create-function --name hybrid-gate-mock-index --function-config C
 aws cloudfront create-origin-access-control --origin-access-control-config Name=hybrid-gate-mock-apps-oac,SigningProtocol=sigv4,SigningBehavior=always,OriginAccessControlOriginType=s3
 aws cloudfront create-distribution --distribution-config file://cf-dist.json   # default → API Gateway (CachingDisabled, AllViewerExceptHostHeader, all methods); /_next/static/* cached; /mock/* → S3 via OAC + index function
 aws s3api put-bucket-policy --bucket hybrid-gate-mock-apps-383845656169 --policy '…cloudfront.amazonaws.com, AWS:SourceArn = distribution ARN…'
-aws lambda update-function-configuration --function-name hybrid-gate-panel --environment 'Variables={MOCK_BASE=https://d2mtp1n5q1cktr.cloudfront.net/mock}'
+aws lambda update-function-configuration --function-name hybrid-gate-panel --environment 'Variables={MOCK_BASE=https://d2mtp1n5q1cktr.cloudfront.net/mock,PANEL_READ_ONLY=1}'
 ```
 
 The CloudFront Function:

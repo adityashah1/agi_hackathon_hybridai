@@ -48,6 +48,7 @@ Environment overrides go in `apps/panel/.env.local`; all are optional:
 | `PYTHON_BIN` | `<repo>/.venv/bin/python`, else `python3` | Interpreter for jobs. |
 | `MOCK_APPS_PORT` | `8765` | Port *Serve mock apps* uses. |
 | `MOCK_BASE` | `http://localhost:<MOCK_APPS_PORT>` | Fills `{MOCK_BASE}` in `tasks/tasks.yaml` and is passed to every job. Set it to the GitHub Pages URL once the apps are deployed: the Sai cloud computer cannot reach localhost. |
+| `PANEL_READ_ONLY` | unset | `1` refuses job launches, uploads and spec writes (403) and disables the Benchmarks buttons. Set on the hosted demo, whose `/api/jobs` would otherwise be reachable without auth. |
 
 Checks, from `frontend/`:
 
@@ -71,8 +72,9 @@ A copy of the panel runs on AWS at `https://d2mtp1n5q1cktr.cloudfront.net/`, wit
 `https://d2mtp1n5q1cktr.cloudfront.net/mock/` (that address is the hosted copy's `MOCK_BASE`, and
 a `MOCK_BASE` the Sai cloud computer can reach). It is the same Next.js server in a Lambda container
 image behind CloudFront, so it shows the sample run and the real `tasks/tasks.yaml`, but it has no
-Python backend: the status strip says so, and job launches fail honestly. Resources, redeploy and
-teardown commands are in [deploy/aws/README.md](deploy/aws/README.md).
+Python backend: the status strip says so, and it runs read-only (`PANEL_READ_ONLY=1`), so job
+launches, uploads and spec writes are refused. Resources, redeploy and teardown commands are in
+[deploy/aws/README.md](deploy/aws/README.md).
 
 ## Layout
 

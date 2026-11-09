@@ -428,6 +428,13 @@ const Page = async () => {
       disabledReason: needsDeps ?? needsSai,
     },
   ];
+  const launchable: Launcher[] = backend.readOnly
+    ? launchers.map((l) => ({
+        ...l,
+        disabled: true,
+        disabledReason: "read-only hosted copy",
+      }))
+    : launchers;
 
   return (
     <>
@@ -445,7 +452,7 @@ const Page = async () => {
         <JobConsole
           description="Each button runs a Python entry point from the repo root and tails its output. The mock apps server may run beside one model job; everything else runs one at a time. Buttons are disabled until the backend status above says the prerequisite is there."
           initialJobs={jobs}
-          launchers={launchers}
+          launchers={launchable}
         />
         <BenchTable benches={benches} />
         <SubgoalCard subgoals={subgoals} />
