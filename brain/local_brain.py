@@ -95,7 +95,7 @@ Actions:
 - type: type `text` into the currently focused field.
 - key: press one key; `key` is one of enter, tab, escape, backspace, up, down, pageup, pagedown.
 - scroll: scroll at (x, y); `key` is "up" or "down".
-- done: the goal is already achieved on screen.
+- done: the goal is already achieved on screen. If the goal asks a question, put the answer in `text`.
 Set unused fields to 0 or "". Keep `why` under 15 words.
 Reply with JSON only."""
 
@@ -262,8 +262,9 @@ def to_env_action(a: dict) -> Optional[dict]:
         return {"type": "type", "text": a["text"]}
     if act == "key":
         return {"type": "key", "name": a["key"]}
-    if act == "scroll":
-        return {"type": "scroll", "dx": 0, "dy": 3 if a["key"] == "down" else -3}
+    if act == "scroll":  # x, y = where to scroll (LocalEnv moves the mouse there first)
+        return {"type": "scroll", "dx": 0, "dy": 3 if a["key"] == "down" else -3,
+                "x": a.get("x"), "y": a.get("y")}
     return None
 
 

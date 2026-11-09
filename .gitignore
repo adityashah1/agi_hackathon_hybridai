@@ -23,3 +23,7 @@ models/
 
 # Sai lease state (machine id, local only)
 data/lease.json
+
+# local power profiling (machine-specific)
+data/power.log
+data/power_baseline.json
