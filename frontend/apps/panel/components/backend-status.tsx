@@ -45,12 +45,12 @@ const Chip = ({
 
 const mockAppsDetail = (status: Status): string => {
   if (status.mockApps.running) {
-    return `The mock apps (Inbox, Vendor Portal, Settings) answer at ${status.mockApps.base}/. Jobs receive that address as MOCK_BASE.`;
+    return `The sandbox apps (Inbox, Vendor Portal, Settings) answer at ${status.mockApps.base}/. Jobs receive that address as MOCK_BASE.`;
   }
   if (status.mockApps.present) {
-    return `mock_apps/ is in the repo but nothing serves it. From the repo root: python -m http.server ${status.mockApps.port} -d mock_apps, or press Serve mock apps on the Benchmarks screen.`;
+    return `The sandbox apps are in the repo but nothing serves them. From the repo root: python -m http.server ${status.mockApps.port} -d mock_apps, or press Serve sandbox apps on the Benchmarks screen.`;
   }
-  return "mock_apps/ is missing from this checkout. Pull the latest main.";
+  return "The sandbox apps folder is missing from this checkout. Pull the latest main.";
 };
 
 /**
@@ -82,7 +82,18 @@ export const BackendStatus = ({ initial }: { initial: Status }) => {
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2">
-      <span className="mr-1 font-medium text-xs">Backend on this machine</span>
+      <span className="mr-1 font-medium text-xs">
+        {status.readOnly
+          ? "Backend of this hosted copy"
+          : "Backend on this machine"}
+      </span>
+      {status.readOnly ? (
+        <Chip
+          detail="PANEL_READ_ONLY=1: this copy has no Python backend and refuses job launches, uploads and spec writes. Run the panel locally for those."
+          label="Read-only hosted copy"
+          ok={false}
+        />
+      ) : null}
       <Chip
         detail={
           status.python.ok
@@ -143,7 +154,7 @@ export const BackendStatus = ({ initial }: { initial: Status }) => {
       />
       <Chip
         detail={mockAppsDetail(status)}
-        label={`Mock apps :${status.mockApps.port}`}
+        label={`Sandbox apps :${status.mockApps.port}`}
         ok={status.mockApps.running}
       />
       <Badge className="font-mono text-[10px]" variant="outline">

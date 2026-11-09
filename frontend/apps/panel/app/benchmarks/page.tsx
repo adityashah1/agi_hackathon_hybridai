@@ -386,7 +386,7 @@ const Page = async () => {
   const mockRunning = backend.mockApps.running;
   const launchers: Launcher[] = [
     {
-      label: `Serve mock apps on :${backend.mockApps.port}`,
+      label: `Serve sandbox apps on :${backend.mockApps.port}`,
       request: { kind: "mockapps" },
       disabled: mockRunning || !backend.mockApps.present,
       disabledReason: mockRunning
@@ -394,12 +394,12 @@ const Page = async () => {
         : "mock_apps/ not in this checkout",
     },
     {
-      label: "Mock apps self-test · 27 checks",
+      label: "Sandbox apps self-test · 27 checks",
       request: { kind: "selftest" },
       disabled: !(mockRunning && backend.deps.playwright),
       disabledReason: mockRunning
         ? "playwright is not installed"
-        : "serve the mock apps first",
+        : "serve the sandbox apps first",
     },
     ...BENCH_MODELS.map((model) => ({
       label: `Bench ${LOCAL_BRAINS.find((b) => b.id === model)?.name ?? model}`,
@@ -428,6 +428,13 @@ const Page = async () => {
       disabledReason: needsDeps ?? needsSai,
     },
   ];
+  const launchable: Launcher[] = backend.readOnly
+    ? launchers.map((l) => ({
+        ...l,
+        disabled: true,
+        disabledReason: "read-only hosted copy",
+      }))
+    : launchers;
 
   return (
     <>
@@ -443,9 +450,9 @@ const Page = async () => {
         />
         <BackendStatus initial={backend} />
         <JobConsole
-          description="Each button runs a Python entry point from the repo root and tails its output. The mock apps server may run beside one model job; everything else runs one at a time. Buttons are disabled until the backend status above says the prerequisite is there."
+          description="Each button runs a Python entry point from the repo root and tails its output. The sandbox apps server may run beside one model job; everything else runs one at a time. Buttons are disabled until the backend status above says the prerequisite is there."
           initialJobs={jobs}
-          launchers={launchers}
+          launchers={launchable}
         />
         <BenchTable benches={benches} />
         <SubgoalCard subgoals={subgoals} />

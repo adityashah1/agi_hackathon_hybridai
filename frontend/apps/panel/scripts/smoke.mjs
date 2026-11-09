@@ -33,7 +33,13 @@ const open = async (browser, path) => {
   page.on("pageerror", (e) =>
     logs.push(`pageerror: ${String(e).slice(0, 240)}`)
   );
-  page.on("requestfailed", (r) => logs.push(`requestfailed: ${r.url()}`));
+  // Next cancels stale prefetches itself (net::ERR_ABORTED); only real failures count.
+  page.on("requestfailed", (r) => {
+    const reason = r.failure()?.errorText ?? "";
+    if (reason !== "net::ERR_ABORTED") {
+      logs.push(`requestfailed: ${reason} ${r.url()}`);
+    }
+  });
   await page.setViewport({ width: 1440, height: 1000 });
   await page.goto(`${BASE}${path}`, { waitUntil: "load", timeout: 60_000 });
   await sleep(WAIT_MS);

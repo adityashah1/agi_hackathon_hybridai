@@ -60,7 +60,7 @@ export const expandMockBase = (s: string, base: string): string =>
   s.split(MOCK_BASE_PLACEHOLDER).join(base.replace(TRAILING_SLASH, ""));
 
 const APP_BY_URL: [needle: string, app: string][] = [
-  ["/inbox/", "Mock Mail"],
+  ["/inbox/", "Harbor Mail"],
   ["/vendor/", "Acme Vendor Portal"],
   ["/settings/", "Account Settings"],
   ["wikipedia.org", "Wikipedia"],
@@ -78,7 +78,7 @@ export const appFor = (startUrl: string): string => {
 };
 
 export const KIND_LABEL: Record<TaskKind, string> = {
-  intricate: "intricate · mock apps",
+  intricate: "intricate · sandbox apps",
   simple: "simple · real site",
 };
 
@@ -376,7 +376,7 @@ export const HERO_STAGES: HeroStage[] = [
   {
     stage: 1,
     title: "Find the Acme invoice",
-    app: "Mock Mail",
+    app: "Harbor Mail",
     path: "inbox/",
     done_when:
       "Email e01 'Invoice INV-2207 for PO-881' is open and its link to the portal is followed.",
@@ -394,7 +394,7 @@ export const HERO_STAGES: HeroStage[] = [
   {
     stage: 3,
     title: "Reply with the case number",
-    app: "Mock Mail",
+    app: "Harbor Mail",
     path: "inbox/",
     done_when:
       "The reply to e01 quotes the real CASE number and the app prints CONFIRM 10ZJ53I.",

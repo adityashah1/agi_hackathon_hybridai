@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { repoRoot } from "@/lib/backend";
+import { READ_ONLY_MESSAGE, readOnly, repoRoot } from "@/lib/backend";
 import { isSafeRunId } from "@/lib/run-cookie";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +41,9 @@ export const GET = async () => {
 
 /** POST /api/spec {spec} → writes tasks/<spec_id>.json for the Python runner. */
 export const POST = async (req: Request) => {
+  if (readOnly()) {
+    return NextResponse.json({ error: READ_ONLY_MESSAGE }, { status: 403 });
+  }
   let body: unknown;
   try {
     body = await req.json();

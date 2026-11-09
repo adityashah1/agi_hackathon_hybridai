@@ -197,7 +197,7 @@ const planMockApps = (): Plan => {
   return {
     args: ["-m", "http.server", String(port), "-d", "mock_apps"],
     runId: null,
-    note: `Serves the static mock apps (Inbox, Vendor Portal, Settings) on http://localhost:${port}/ until stopped. Fictional data only.`,
+    note: `Serves the static sandbox apps (Inbox, Vendor Portal, Settings) on http://localhost:${port}/ until stopped. Fictional data only.`,
   };
 };
 
@@ -206,7 +206,7 @@ const planSelftest = (): Plan => {
   return {
     args: ["-m", "mock_apps.selftest", "--base", base],
     runId: null,
-    note: "27 DOM-level checks of the mock apps in headless Chromium. Needs playwright and the mock apps server running.",
+    note: "27 DOM-level checks of the sandbox apps in headless Chromium. Needs playwright and the sandbox apps server running.",
   };
 };
 

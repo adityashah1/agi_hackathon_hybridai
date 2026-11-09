@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { READ_ONLY_MESSAGE, readOnly } from "@/lib/backend";
 import { listRuns, saveUploadedRun } from "@/lib/data/source";
 import { isSafeRunId } from "@/lib/run-cookie";
 
@@ -33,6 +34,9 @@ const sanitize = (raw: string) =>
  * Saves to data/runs/<run_id>/steps.jsonl after checking at least one line parses.
  */
 export const POST = async (req: Request) => {
+  if (readOnly()) {
+    return NextResponse.json({ error: READ_ONLY_MESSAGE }, { status: 403 });
+  }
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {

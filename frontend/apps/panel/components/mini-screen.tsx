@@ -3,7 +3,7 @@ import { taskById } from "@/lib/data/task-suite";
 
 /** Title-bar color per mock app, so a glance tells the inbox from the portal. */
 const APP_BAR: Record<string, string> = {
-  "Mock Mail": "bg-amber-500/70",
+  "Harbor Mail": "bg-amber-500/70",
   "Acme Vendor Portal": "bg-violet-500/70",
   "Account Settings": "bg-emerald-500/70",
 };

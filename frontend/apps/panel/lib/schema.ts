@@ -161,7 +161,7 @@ export const METHOD: Record<string, string> = {
   handoff_tokens:
     "Token count of the goal, history summary and screenshot payload sent across the boundary.",
   success:
-    "Final-state check after the episode's last step (tasks/checkers.py task_success): the mock app's CONFIRM code, or the answer regex from tasks/tasks.yaml, logged on the terminal done step.",
+    "Final-state check after the episode's last step (tasks/checkers.py task_success): the sandbox app's CONFIRM code, or the answer regex from tasks/tasks.yaml, logged on the terminal done step.",
   ipw: "Successful tasks divided by energy. Local energy is measured; any cloud share is modeled, so hybrid and Sai-only values are ranges.",
   gate_sweep:
     "Cloud-call share replays the logged signal (agreement score or decision-token log-prob) against each threshold. Success is estimated from local-only and Sai-only step outcomes, so it is modeled.",

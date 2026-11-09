@@ -24,6 +24,11 @@ export const env = createEnv({
      * the apps are deployed: the Sai cloud computer cannot reach localhost.
      */
     MOCK_BASE: z.url().optional(),
+    /**
+     * "1" makes the panel read-only: no job launches, uploads or spec writes.
+     * Set on the hosted demo, which has no backend and no auth on /api/jobs.
+     */
+    PANEL_READ_ONLY: z.enum(["0", "1"]).optional(),
   },
   client: {},
   runtimeEnv: {
@@ -32,5 +37,6 @@ export const env = createEnv({
     PYTHON_BIN: process.env.PYTHON_BIN,
     MOCK_APPS_PORT: process.env.MOCK_APPS_PORT,
     MOCK_BASE: process.env.MOCK_BASE,
+    PANEL_READ_ONLY: process.env.PANEL_READ_ONLY,
   },
 });

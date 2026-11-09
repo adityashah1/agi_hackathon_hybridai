@@ -44,7 +44,7 @@ const QUESTIONS: Question[] = [
     field: "workflow",
     kind: "text",
     prompt:
-      "What should the agent do for you? Describe the routine in a sentence. Today I know the eight tasks in tasks/tasks.yaml: Mock Mail, the Acme Vendor Portal, Account Settings, and three real sites.",
+      "What should the agent do for you? Describe the routine in a sentence. Today I know the eight tasks in tasks/tasks.yaml: Harbor Mail, the Acme Vendor Portal, Account Settings, and three real sites.",
   },
   {
     field: "success",

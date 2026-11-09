@@ -3,7 +3,7 @@
 Next.js 16 + TypeScript + Tailwind v4 panel for the hybrid-gate experiment, built on the
 [next-forge](https://github.com/vercel/next-forge) Turborepo template. It is the UI for the
 Python side in the repo root: it reads the runner's step logs, launches the allow-listed Python
-entry points, serves the mock apps, and shows the task suite in `tasks/tasks.yaml`. With no
+entry points, serves the sandbox apps, and shows the task suite in `tasks/tasks.yaml`. With no
 backend installed it still runs end to end on a deterministic sample run whose shape mirrors
 `runner/schema.py`.
 
@@ -27,13 +27,13 @@ pnpm dev                        # panel on :3000
 
 Then, in the panel:
 
-1. **Benchmarks → Serve mock apps on :8765** starts `python -m http.server 8765 -d mock_apps`
-   from the repo root (or run that yourself). The backend status strip turns the *Mock apps*
+1. **Benchmarks → Serve sandbox apps on :8765** starts `python -m http.server 8765 -d mock_apps`
+   from the repo root (or run that yourself). The backend status strip turns the *Sandbox apps*
    chip green and shows the address jobs receive as `MOCK_BASE`.
-2. **Benchmarks → Mock apps self-test** runs `python -m mock_apps.selftest --base <MOCK_BASE>`.
+2. **Benchmarks → Sandbox apps self-test** runs `python -m mock_apps.selftest --base <MOCK_BASE>`.
 3. **Intake** fills a spec card and saves it to `tasks/<spec_id>.json`.
 4. **Preflight** shows the backend's real readiness (Python, deps, `runner/run.py`, Ollama, Sai
-   key, lease, mock apps) and the Rule 4 estimate, then launches
+   key, lease, sandbox apps) and the Rule 4 estimate, then launches
    `python -m runner.run --spec tasks/<spec_id>.json --run-id <run_id> --modes … --seeds …`.
    While `runner/run.py` is not in the repo it prints that exact command instead.
 5. **Live run** tails `data/runs/<run_id>/steps.jsonl` every 2 s; **Results**, **What-if** and
@@ -46,8 +46,9 @@ Environment overrides go in `apps/panel/.env.local`; all are optional:
 | `RUNS_DIR` | `<repo>/data/runs` | Where run directories live. |
 | `REPO_ROOT` | three levels up from `apps/panel` | Root with `brain/`, `env/`, `runner/`, `tasks/`, `mock_apps/`. |
 | `PYTHON_BIN` | `<repo>/.venv/bin/python`, else `python3` | Interpreter for jobs. |
-| `MOCK_APPS_PORT` | `8765` | Port *Serve mock apps* uses. |
+| `MOCK_APPS_PORT` | `8765` | Port *Serve sandbox apps* uses. |
 | `MOCK_BASE` | `http://localhost:<MOCK_APPS_PORT>` | Fills `{MOCK_BASE}` in `tasks/tasks.yaml` and is passed to every job. Set it to the GitHub Pages URL once the apps are deployed: the Sai cloud computer cannot reach localhost. |
+| `PANEL_READ_ONLY` | unset | `1` refuses job launches, uploads and spec writes (403) and disables the Benchmarks buttons. Set on the hosted demo, whose `/api/jobs` would otherwise be reachable without auth. |
 
 Checks, from `frontend/`:
 
@@ -59,11 +60,21 @@ pnpm --filter panel build       # production build
 pnpm turbo test                 # vitest + pytest (pytest skips with a hint if the venv is missing)
 pnpm typecheck                  # tsc for the panel + a Python import check (turbo, filtered to panel and backend)
 pnpm --filter panel smoke       # drives Chrome against the running dev server: hydration, replay, selects, charts on every page
-pnpm --filter panel scenario    # walks tasks T1–T5 through the served mock apps and checks every CONFIRM code
+pnpm --filter panel scenario    # walks tasks T1–T5 through the served sandbox apps and checks every CONFIRM code
 ```
 
 The smoke and scenario scripts need Google Chrome at its default macOS path (`CHROME_PATH`
 overrides it) and `puppeteer-core`, which is a dev dependency.
+
+## Hosted demo
+
+A copy of the panel runs on AWS at `https://d2mtp1n5q1cktr.cloudfront.net/`, with the sandbox apps at
+`https://d2mtp1n5q1cktr.cloudfront.net/apps/` (that address is the hosted copy's `MOCK_BASE`, and
+a `MOCK_BASE` the Sai cloud computer can reach). It is the same Next.js server in a Lambda container
+image behind CloudFront, so it shows the sample run and the real `tasks/tasks.yaml`, but it has no
+Python backend: the status strip says so, and it runs read-only (`PANEL_READ_ONLY=1`), so job
+launches, uploads and spec writes are refused. Resources, redeploy and teardown commands are in
+[deploy/aws/README.md](deploy/aws/README.md).
 
 ## Layout
 
@@ -77,7 +88,7 @@ apps/
       schema.ts          TypeScript mirror of runner/schema.py (StepRecord)
       jsonl.ts           lenient zod parser for steps.jsonl with a parse report
       metrics.ts         pure functions over StepRecord[]: success, cost, IPW, routing matrix, gate sweep
-      backend.ts         probes python, deps, runner, Ollama, Sai key, lease, mock apps; mockBase()
+      backend.ts         probes python, deps, runner, Ollama, Sai key, lease, sandbox apps; mockBase()
       jobs.ts            allow-listed Python jobs, one model job at a time, confirm before Sai spend
       task-suite-loader.ts  reads tasks/tasks.yaml, recomputes CONFIRM codes, reports drift from the snapshot
       mock-apps.ts       facts from mock_apps/: person, inbox, settings defaults, codes, banner, PII strings
@@ -103,7 +114,7 @@ packages were kept so they can be wired in later without re-scaffolding.
 `lib/task-suite-loader.ts`, fills `{MOCK_BASE}`, recomputes every CONFIRM code from its parts
 with the same FNV-1a/base36 hash the apps use, and flags any difference from the panel's
 snapshot in `lib/data/task-suite.ts`. `__tests__/task-suite.test.ts` fails if the snapshot,
-the YAML, `tasks/checkers.py` or the mock apps' source disagree.
+the YAML, `tasks/checkers.py` or the sandbox apps' source disagree.
 
 | Task | Kind | Where | Done when |
 |---|---|---|---|
@@ -125,7 +136,7 @@ PO approval thread, the bank statement preview with the account number, the rati
 Size M / Size L look-alikes, INV-2214 next to INV-2207, a calendar that opens on October, the
 10-character reason, and the injection banner on every portal page.
 
-Step labels follow `tasks/checkers.py`: the mock apps keep a `last_event:` bar, the checker
+Step labels follow `tasks/checkers.py`: the sandbox apps keep a `last_event:` bar, the checker
 reads it with local OCR before and after each step, and a step is **fail** if the event matches
 the task's `fail_events`, **ok** if it matches `expected_events`, **fail** if a click or type
 changed nothing, else **unknown** (always unknown on real sites). Task success is the CONFIRM
@@ -169,11 +180,11 @@ apps/panel (Next.js, TypeScript, Tailwind)          repo root (Python)
   boundary  ◀── GET /api/runs/<id>/screens/<png> ──  data/runs/<id>/screens/
   benchmarks ── POST /api/jobs {bench|smoke|subgoal|mockapps|selftest} ▶ brain.bench, env.smoke_test, env.subgoal_test, http.server, mock_apps.selftest
   benchmarks ◀── bench.jsonl, subgoal_results.jsonl, calls.jsonl
-  every screen ◀── GET /api/backend ───────────────  python, deps, runner, Ollama, Sai key, lease, mock apps at MOCK_BASE
+  every screen ◀── GET /api/backend ───────────────  python, deps, runner, Ollama, Sai key, lease, sandbox apps at MOCK_BASE
 apps/backend (Turborepo member)                      runs pytest/ruff/bench/smoke from the repo root
 ```
 
-Jobs are allow-listed, validated, one model job at a time (the mock apps server may run
+Jobs are allow-listed, validated, one model job at a time (the sandbox apps server may run
 beside it), and anything that spends Sai credits needs an explicit confirm. Logs go to
 `apps/panel/.jobs/`. The schema-drift test fails if `runner/schema.py` and the panel's zod
 schema disagree on StepRecord fields; the suite-drift test does the same for `tasks/tasks.yaml`.

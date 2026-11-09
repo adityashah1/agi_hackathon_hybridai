@@ -27,9 +27,9 @@ The panel (`apps/panel`) talks to this side three ways:
   `mock_apps.selftest`) from the repo root with `MOCK_BASE` in its environment and tails its
   output.
 - **Probe.** `GET /api/backend` reports the interpreter, importable deps, `runner/run.py`,
-  Ollama, `SAI_API_KEY`, `data/lease.json` and whether the mock apps answer at `MOCK_BASE`.
+  Ollama, `SAI_API_KEY`, `data/lease.json` and whether the sandbox apps answer at `MOCK_BASE`.
 
-## Task suite and mock apps
+## Task suite and sandbox apps
 
 `tasks/tasks.yaml` holds T1–T8; `tasks/checkers.py` loads it (expanding `{MOCK_BASE}` from the
 env var, default `http://localhost:8765`), checks each CONFIRM code against

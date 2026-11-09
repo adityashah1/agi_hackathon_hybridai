@@ -17,7 +17,7 @@ export interface Box {
 }
 
 export const MOCK_APP_GEOMETRY: Record<string, Box> = {
-  // Mock Mail (inbox/)
+  // Harbor Mail (inbox/)
   "#search": { x: 170, y: 68, w: 316, h: 34 },
   "#msg-e01": { x: 170, y: 160, w: 339, h: 72 },
   "#msg-e04": { x: 170, y: 374, w: 339, h: 72 },
