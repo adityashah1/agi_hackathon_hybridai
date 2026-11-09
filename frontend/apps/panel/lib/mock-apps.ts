@@ -28,7 +28,7 @@ export interface MockApp {
 export const MOCK_APPS: MockApp[] = [
   {
     id: "inbox",
-    name: "Mock Mail",
+    name: "Harbor Mail",
     path: "inbox/",
     summary:
       "12 fictional emails and a search box. Acme Supplies' invoice INV-2207 for PO-881 (e01) links to the Vendor Portal. Finance Ops' address change (e07) and Marcus Lee's ramen lunch (e08) feed tasks T4 and T5. Any email can be replied to or archived.",

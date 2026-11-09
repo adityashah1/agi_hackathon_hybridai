@@ -217,10 +217,10 @@ const ObstaclesCard = ({
   <Card className="gap-2">
     <CardHeader>
       <CardTitle className="text-base">
-        What the mock apps put in the way
+        What the sandbox apps put in the way
       </CardTitle>
       <CardDescription>
-        {SCENARIO.mismatch} The apps are static pages in mock_apps/, sized for a
+        {SCENARIO.mismatch} The apps are static pages in the repo, sized for a
         1024×768 viewport.{" "}
         {base ? (
           <>
@@ -296,7 +296,7 @@ const ObstaclesCard = ({
         <div>
           <div className="mb-1 font-medium">How a step gets its label</div>
           <p className="text-muted-foreground">
-            Every mock page keeps a{" "}
+            Every sandbox page keeps a{" "}
             <span className="font-mono">last_event:</span> bar at the bottom
             (click #submit-dispute, change #line-item = &quot;L2&quot;, complete
             dispute). The checker reads it with local OCR before and after each
@@ -318,7 +318,7 @@ const ObstaclesCard = ({
             text when a task completes. The code is base36 of an FNV-1a hash
             over the structured choices (invoice, line and date for a dispute;
             email and whether the reply quotes the real case number), so the
-            checker recomputes it with mock_apps/codes.py, tolerates OCR
+            checker recomputes it with the apps&apos; own hash, tolerates OCR
             look-alikes such as 0 and O, and sets the done step&apos;s label.
             Real-site tasks are checked against an answer regex instead.
           </p>
@@ -381,11 +381,11 @@ const SuiteTable = ({
             : "panel snapshot of tasks/tasks.yaml"}
         </Badge>
         <Badge className="font-mono text-[10px]" variant="outline">
-          MOCK_BASE {suite.mockBase}
+          sandbox apps at {suite.mockBase}
         </Badge>
       </CardTitle>
       <CardDescription>
-        Eight tasks: five intricate ones against the mock apps, three simple
+        Eight tasks: five intricate ones against the sandbox apps, three simple
         ones on real sites. T1 is the demo scenario. The sample run plays{" "}
         {SAMPLE_TASK_IDS.join(", ")}. Each CONFIRM code is recomputed from the
         task&apos;s parts with the hash the apps use, so the YAML cannot drift

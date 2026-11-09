@@ -1,15 +1,15 @@
 # Hosted demo on AWS (CloudFront → API Gateway → Lambda, plus S3)
 
 The panel runs as a Next.js standalone server inside a Lambda container image, reached through an
-API Gateway HTTP API; the mock apps are static files in S3. One CloudFront distribution fronts
+API Gateway HTTP API; the sandbox apps are static files in S3. One CloudFront distribution fronts
 both, so the suite's `{MOCK_BASE}` resolves to a public address the Sai cloud computer can reach.
 
 | Piece | Resource (us-east-1, account 383845656169) |
 |---|---|
 | Public URL | `https://d2mtp1n5q1cktr.cloudfront.net/` (distribution `E74RXKVEPETEE`) |
-| Mock apps | `https://d2mtp1n5q1cktr.cloudfront.net/mock/` → S3 `hybrid-gate-mock-apps-383845656169` (prefix `mock/`, OAC `E2WPZRM30DWE4`, CloudFront Function `hybrid-gate-mock-index` adds `index.html`) |
+| Sandbox apps | `https://d2mtp1n5q1cktr.cloudfront.net/apps/` → S3 `hybrid-gate-mock-apps-383845656169` (prefix `apps/`, OAC `E2WPZRM30DWE4`, CloudFront Function `hybrid-gate-mock-index` adds `index.html`) |
 | Panel | Lambda `hybrid-gate-panel` (arm64, 2048 MB, 60 s) from ECR `hybrid-gate-panel:lambda`; role `hybrid-gate-panel-lambda`; HTTP API `5584ug7nse` (`https://5584ug7nse.execute-api.us-east-1.amazonaws.com`, `$default` route, payload v2) |
-| Lambda env | `MOCK_BASE=https://d2mtp1n5q1cktr.cloudfront.net/mock`, `PANEL_READ_ONLY=1`, `RUNS_DIR=/tmp/runs`, `REPO_ROOT=/app/repo` |
+| Lambda env | `MOCK_BASE=https://d2mtp1n5q1cktr.cloudfront.net/apps`, `PANEL_READ_ONLY=1`, `RUNS_DIR=/tmp/runs`, `REPO_ROOT=/app/repo` |
 
 Everything is tagged `Project=hybrid-gate`. App Runner was the first choice (always warm) but this
 account cannot create App Runner services, so the amd64 image `hybrid-gate-panel:latest` and the
@@ -20,8 +20,8 @@ avoids with a grant scoped to the API's ARN.
 ## What the hosted copy can and cannot do
 
 - Every screen works on the sample run; the overview reads `tasks/tasks.yaml` from the image and
-  links the mock apps at `/mock/…`. The backend status strip reports the truth: no Python, no
-  runner, no Ollama, no Sai key; mock apps reachable.
+  links the sandbox apps at `/apps/…`. The backend status strip reports the truth: no Python, no
+  runner, no Ollama, no Sai key; sandbox apps reachable.
 - `PANEL_READ_ONLY=1`: `/api/jobs` has no auth and could otherwise launch model jobs or Sai
   tasks, so on the hosted copy `POST /api/jobs`, `POST /api/runs` (upload) and `POST /api/spec`
   answer 403 with a plain message, the Benchmarks buttons are disabled with that reason, and the
@@ -30,7 +30,7 @@ avoids with a grant scoped to the API's ARN.
   integration times out at 30 s. The first request after a few idle minutes takes 2–3 s (cold
   start).
 - The default cache behavior does not cache, so the panel is always fresh. `/_next/static/*` and
-  `/mock/*` are cached; after re-syncing the mock apps, invalidate `/mock/*`.
+  `/apps/*` are cached; after re-syncing the sandbox apps, invalidate `/apps/*`.
 
 ## Redeploy
 
@@ -43,10 +43,10 @@ aws lambda update-function-code --function-name hybrid-gate-panel \
   --image-uri 383845656169.dkr.ecr.us-east-1.amazonaws.com/hybrid-gate-panel:lambda
 aws lambda wait function-updated-v2 --function-name hybrid-gate-panel
 
-# mock apps
-aws s3 sync mock_apps s3://hybrid-gate-mock-apps-383845656169/mock/ \
+# sandbox apps
+aws s3 sync mock_apps s3://hybrid-gate-mock-apps-383845656169/apps/ \
   --exclude "*.py" --exclude "__pycache__/*" --exclude "README.md" --delete
-aws cloudfront create-invalidation --distribution-id E74RXKVEPETEE --paths "/mock/*"
+aws cloudfront create-invalidation --distribution-id E74RXKVEPETEE --paths "/apps/*"
 ```
 
 `build-image.sh` runs `pnpm --filter panel build` (standalone output, set in `next.config.ts`),
@@ -67,10 +67,10 @@ INT=$(aws apigatewayv2 create-integration --api-id $API_ID --integration-type AW
 aws apigatewayv2 create-route --api-id $API_ID --route-key '$default' --target integrations/$INT
 aws apigatewayv2 create-stage --api-id $API_ID --stage-name '$default' --auto-deploy
 aws lambda add-permission --function-name hybrid-gate-panel --statement-id apigw-invoke --action lambda:InvokeFunction --principal apigateway.amazonaws.com --source-arn "arn:aws:execute-api:us-east-1:383845656169:$API_ID/*/*"
-aws s3api create-bucket --bucket hybrid-gate-mock-apps-383845656169   # + public access block, sync mock_apps to mock/
+aws s3api create-bucket --bucket hybrid-gate-mock-apps-383845656169   # + public access block, sync mock_apps to apps/
 aws cloudfront create-function --name hybrid-gate-mock-index --function-config Comment=…,Runtime=cloudfront-js-2.0 --function-code fileb://cf-index.js   # then publish-function
 aws cloudfront create-origin-access-control --origin-access-control-config Name=hybrid-gate-mock-apps-oac,SigningProtocol=sigv4,SigningBehavior=always,OriginAccessControlOriginType=s3
-aws cloudfront create-distribution --distribution-config file://cf-dist.json   # default → API Gateway (CachingDisabled, AllViewerExceptHostHeader, all methods); /_next/static/* cached; /mock/* → S3 via OAC + index function
+aws cloudfront create-distribution --distribution-config file://cf-dist.json   # default → API Gateway (CachingDisabled, AllViewerExceptHostHeader, all methods); /_next/static/* cached; /apps/* → S3 via OAC + index function
 aws s3api put-bucket-policy --bucket hybrid-gate-mock-apps-383845656169 --policy '…cloudfront.amazonaws.com, AWS:SourceArn = distribution ARN…'
 aws lambda update-function-configuration --function-name hybrid-gate-panel --environment 'Variables={MOCK_BASE=https://d2mtp1n5q1cktr.cloudfront.net/mock,PANEL_READ_ONLY=1}'
 ```

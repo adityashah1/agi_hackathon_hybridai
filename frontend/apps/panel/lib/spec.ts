@@ -38,9 +38,9 @@ export const SAMPLE_SPEC: TaskSpec = {
   created_at: "2026-11-08T16:40:00Z",
   workflow:
     "Find the invoice from Acme in the inbox, open the vendor portal, dispute the line item that doesn't match the purchase order, then reply to the email with the case number.",
-  app: "Mock Mail, Acme Vendor Portal",
+  app: "Harbor Mail, Acme Vendor Portal",
   success_criteria:
-    "The dispute on INV-2207 line L2 (Size L gloves, 25 billed vs 20 on PO-881) gets a CASE number and the reply to Acme's email e01 quotes it, so Mock Mail prints CONFIRM 10ZJ53I. T3 alone prints 00NR7IZ; T5 prints 1OPUB08.",
+    "The dispute on INV-2207 line L2 (Size L gloves, 25 billed vs 20 on PO-881) gets a CASE number and the reply to Acme's email e01 quotes it, so Harbor Mail prints CONFIRM 10ZJ53I. T3 alone prints 00NR7IZ; T5 prints 1OPUB08.",
   sensitivity: "injection_prone",
   daily_volume: 25,
   preference: "balanced",
